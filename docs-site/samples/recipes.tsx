@@ -340,7 +340,7 @@ export function ManyDisplayCountdownsSample() {
   const deadlines = useMemo(() => [12_000, 24_000, 36_000, 48_000].map(offset => now() + offset), []);
 
   return (
-    <div className="sample-box">
+    <DemoShell eyebrow="Display-only list" title="4 countdowns" status={clock.status}>
       <div className="sample-board">
         {deadlines.map((deadline, index) => {
           const remainingMs = Math.max(0, deadline - clock.now);
@@ -356,7 +356,7 @@ export function ManyDisplayCountdownsSample() {
         })}
       </div>
       <p className="sample-muted">One shared `useTimer()` drives every display-only row.</p>
-    </div>
+    </DemoShell>
   );
 }
 
@@ -370,9 +370,10 @@ export function TimerGroupSample() {
     [],
   );
   const timers = useTimerGroup({ updateIntervalMs: 500, items });
+  const runningCount = timers.ids.filter(id => timers.get(id)?.isRunning).length;
 
   return (
-    <div className="sample-box">
+    <DemoShell eyebrow="Timer group" title={`${runningCount}/${timers.size} uploads running`} status={runningCount ? 'running' : 'paused'}>
       <div className="sample-board">
         {timers.ids.map((id, index) => {
           const timer = timers.get(id);
@@ -394,7 +395,7 @@ export function TimerGroupSample() {
           );
         })}
       </div>
-    </div>
+    </DemoShell>
   );
 }
 
@@ -445,9 +446,10 @@ export function CheckoutHoldsSample() {
       endWhen: snapshot => snapshot.elapsedMilliseconds >= hold.durationMs,
     })),
   });
+  const activeHolds = holds.filter(hold => timers.get(hold.id)?.isRunning).length;
 
   return (
-    <div className="sample-box">
+    <DemoShell eyebrow="Checkout holds" title={`${activeHolds}/${holds.length} holds active`} status={activeHolds ? 'running' : 'paused'}>
       <div className="sample-board">
         {holds.map(hold => {
           const timer = timers.get(hold.id);
@@ -469,7 +471,7 @@ export function CheckoutHoldsSample() {
           );
         })}
       </div>
-    </div>
+    </DemoShell>
   );
 }
 
@@ -490,9 +492,10 @@ export function PerItemPollingSample() {
       ],
     })),
   });
+  const activeJobs = timers.ids.filter(id => timers.get(id)?.isRunning).length;
 
   return (
-    <div className="sample-box">
+    <DemoShell eyebrow="Per-item polling" title={`${activeJobs}/${timers.size} jobs polling`} status={activeJobs ? 'running' : 'paused'}>
       <div className="sample-board">
         {timers.ids.map(id => {
           const timer = timers.get(id);
@@ -511,7 +514,7 @@ export function PerItemPollingSample() {
           );
         })}
       </div>
-    </div>
+    </DemoShell>
   );
 }
 
