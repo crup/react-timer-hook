@@ -95,12 +95,14 @@ Local docs MCP server:
 {
   "mcpServers": {
     "react-timer-hook-docs": {
-      "command": "node",
-      "args": ["/absolute/path/to/react-timer-hook/mcp/server.mjs"]
+      "command": "npx",
+      "args": ["-y", "@crup/react-timer-hook@latest"]
     }
   }
 }
 ```
+
+The package bundles the MCP server at node_modules/@crup/react-timer-hook/dist/mcp/server.js and exposes it through the react-timer-hook-mcp bin.
 
 ## Boundaries
 

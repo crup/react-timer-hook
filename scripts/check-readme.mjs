@@ -8,6 +8,7 @@ const required = [
   'durationParts',
   'https://crup.github.io/react-timer-hook/',
   '@crup/react-timer-hook@latest',
+  'react-timer-hook-mcp',
   'Bundle size',
   'AI-friendly',
 ];

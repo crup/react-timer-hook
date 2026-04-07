@@ -12,6 +12,7 @@ module.exports = {
         'deps',
         'docs',
         'group',
+        'mcp',
         'release',
         'schedules',
         'state',

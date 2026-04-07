@@ -13,6 +13,9 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "react-timer-hook-mcp": "./dist/mcp/server.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -38,6 +41,9 @@
       "types": "./dist/diagnostics.d.ts",
       "import": "./dist/diagnostics.js",
       "require": "./dist/diagnostics.cjs"
+    },
+    "./mcp/server": {
+      "import": "./dist/mcp/server.js"
     }
   },
   "files": [
@@ -60,6 +66,7 @@
     "docs:dev": "NO_UPDATE_NOTIFIER=1 docusaurus start docs-site",
     "docs:preview": "NO_UPDATE_NOTIFIER=1 docusaurus serve docs-site/build",
     "mcp:docs": "node mcp/server.mjs",
+    "mcp:check": "node scripts/check-mcp-server.mjs",
     "prepare": "husky",
     "readme:check": "node scripts/check-readme.mjs",
     "release": "changeset publish",

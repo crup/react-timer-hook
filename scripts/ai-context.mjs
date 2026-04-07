@@ -8,7 +8,7 @@ const context = {
   docs: 'https://crup.github.io/react-timer-hook/',
   repository: 'https://github.com/crup/react-timer-hook',
   install: {
-    alpha: `npm install ${pkg.name}@alpha`,
+    latest: `npm install ${pkg.name}@latest`,
   },
   runtime: {
     node: '>=18.0.0',
