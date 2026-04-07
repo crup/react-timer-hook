@@ -1,0 +1,19 @@
+{
+  "name": "react-timer-hook",
+  "version": "1.0.0",
+  "description": "React hooks for timer, stopwatch, and current time state.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "react",
+    "hook",
+    "timer",
+    "stopwatch",
+    "time"
+  ],
+  "author": "Rajender Joshi <connect@rajender.pro>",
+  "license": "MIT",
+  "type": "commonjs"
+}
