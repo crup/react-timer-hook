@@ -2,13 +2,11 @@
 
 Thanks for considering a contribution.
 
-This project aims to stay small, deterministic, and heavily tested. Please read the requirements and API docs before proposing API changes:
+This project aims to stay small, deterministic, and heavily tested. Please read the public docs before proposing API changes:
 
-- [Requirements](./REQUIREMENTS.md)
-- [API Specification](./docs/API.md)
-- [Implementation Plan](./docs/IMPLEMENTATION.md)
-- [Task Plan](./docs/TASKS.md)
-- [Branching and Commits](./docs/BRANCHING_AND_COMMITS.md)
+- [Docs](https://crup.github.io/react-timer-hook/)
+- [useTimer](https://crup.github.io/react-timer-hook/api/use-timer/)
+- [useTimerGroup](https://crup.github.io/react-timer-hook/api/use-timer-group/)
 
 ## Project Boundaries
 
@@ -50,12 +48,20 @@ pnpm test
 pnpm typecheck
 pnpm build
 pnpm docs:build
+pnpm size
 pnpm readme:check
 ```
 
 ## Branches and Commit Messages
 
-Use `feature/timer-core-v1` for the first implementation branch.
+Use short-lived branches:
+
+- `feature/*` for features
+- `fix/*` for fixes
+- `docs/*` for docs
+- `chore/*` for maintenance
+
+Alpha releases are published from `next`. Stable publishing is manually locked until the project intentionally switches to final releases.
 
 Use Conventional Commits:
 
@@ -72,8 +78,6 @@ docs(release): document alpha prerelease flow
 ```
 
 Commit messages are enforced with commitlint through Husky. Changesets still own package versioning.
-
-See [Branching and Commits](./docs/BRANCHING_AND_COMMITS.md) for the full branch, alpha, beta, release-candidate, and stable release flow.
 
 ## API Change Rules
 

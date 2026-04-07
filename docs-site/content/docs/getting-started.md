@@ -1,0 +1,51 @@
+---
+title: Getting started
+description: Install the alpha package and wire a timer into a React component.
+---
+
+## Install
+
+Alpha builds are the only release channel until stable publishing is explicitly enabled.
+
+```sh
+npm install @crup/react-timer-hook@alpha
+pnpm add @crup/react-timer-hook@alpha
+```
+
+## Import
+
+```ts
+import { durationParts, useTimer, useTimerGroup } from '@crup/react-timer-hook';
+import type { TimerSnapshot } from '@crup/react-timer-hook';
+```
+
+## First timer
+
+```tsx
+import { durationParts, useTimer } from '@crup/react-timer-hook';
+
+export function BreakTimer() {
+  const durationMs = 5 * 60 * 1000;
+  const timer = useTimer({
+    autoStart: true,
+    updateIntervalMs: 1000,
+    endWhen: snapshot => snapshot.elapsedMilliseconds >= durationMs,
+  });
+
+  const remaining = durationParts(durationMs - timer.elapsedMilliseconds);
+
+  return (
+    <span>
+      {remaining.minutes}:{String(remaining.seconds).padStart(2, '0')}
+    </span>
+  );
+}
+```
+
+## Mental model
+
+Use `timer.now` for wall-clock work such as absolute deadlines and clocks.
+
+Use `timer.elapsedMilliseconds` for active elapsed work such as stopwatches and pausable duration countdowns.
+
+Use `endWhen` to describe when a lifecycle should end. Use `cancel(reason)` for terminal early stops that should not call `onEnd`.

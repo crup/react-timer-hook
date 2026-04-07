@@ -3,15 +3,6 @@ name: Prerelease
 on:
   workflow_dispatch:
     inputs:
-      tag:
-        description: npm dist-tag to publish
-        required: true
-        default: alpha
-        type: choice
-        options:
-          - alpha
-          - beta
-          - rc
       version_base:
         description: Base version before prerelease suffix
         required: true
@@ -51,7 +42,7 @@ jobs:
 
       - name: Set prerelease version
         env:
-          PACKAGE_VERSION: ${{ inputs.version_base }}-${{ inputs.tag }}.${{ github.run_number }}
+          PACKAGE_VERSION: ${{ inputs.version_base }}-alpha.${{ github.run_number }}
         run: |
           node -e "const fs = require('node:fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); pkg.version = process.env.PACKAGE_VERSION; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');"
           node -e "const pkg = require('./package.json'); console.log(pkg.name + '@' + pkg.version);"
@@ -62,7 +53,16 @@ jobs:
           pnpm size
 
       - name: Publish prerelease
-        run: pnpm publish --tag "${{ inputs.tag }}" --access public --no-git-checks
+        run: pnpm publish --tag alpha --access public --no-git-checks
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Keep npm latest on current alpha
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          npm dist-tag add "$PACKAGE_NAME@$PACKAGE_VERSION" latest
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

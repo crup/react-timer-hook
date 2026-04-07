@@ -1,79 +1,71 @@
 # @crup/react-timer-hook
 
-A small React hook library for deterministic timer lifecycles.
+> Deterministic React timer primitives for countdowns, stopwatches, clocks, schedules, and many independent timers.
 
-This package is planned as a replacement for the previous `react-timer-hook` API. It intentionally does not ship formatting, timezone conversion, `ampm` fields, or countdown/stopwatch/clock mode enums. It gives you raw time data and lifecycle controls so your app can decide what the timer means.
+[![npm alpha](https://img.shields.io/npm/v/%40crup%2Freact-timer-hook/alpha?label=npm%20alpha&color=00b894)](https://www.npmjs.com/package/@crup/react-timer-hook?activeTab=versions)
+[![npm downloads](https://img.shields.io/npm/dm/%40crup%2Freact-timer-hook?color=0f766e)](https://www.npmjs.com/package/@crup/react-timer-hook)
+[![CI](https://github.com/crup/react-timer-hook/actions/workflows/ci.yml/badge.svg)](https://github.com/crup/react-timer-hook/actions/workflows/ci.yml)
+[![Docs](https://github.com/crup/react-timer-hook/actions/workflows/docs.yml/badge.svg)](https://github.com/crup/react-timer-hook/actions/workflows/docs.yml)
+[![Size](https://github.com/crup/react-timer-hook/actions/workflows/size.yml/badge.svg)](https://github.com/crup/react-timer-hook/actions/workflows/size.yml)
+[![license](https://img.shields.io/npm/l/%40crup%2Freact-timer-hook?color=111827)](./LICENSE)
+[![types](https://img.shields.io/npm/types/%40crup%2Freact-timer-hook?color=2563eb)](./dist/index.d.ts)
 
-## Status
+📚 Docs: https://crup.github.io/react-timer-hook/
 
-Alpha-ready v1 implementation. The package is intended to be published under the `@crup` npm scope.
+## Why it is different
+
+Most timer libraries mix scheduling, lifecycle, formatting, and app behavior. This package keeps the core small:
+
+- ⏱️ `useTimer()` for one lifecycle.
+- 🧭 `useTimerGroup()` for many keyed lifecycles with one shared scheduler.
+- 🧩 `durationParts()` for display-friendly duration math.
+- 🧼 No timezone, locale, or formatting opinions.
+- 🧪 Built around React Strict Mode, rerenders, async callbacks, and cleanup.
+- 🤖 AI-friendly docs via `llms.txt`, `llms-full.txt`, and a tiny local MCP docs utility.
 
 ## Install
 
-```sh
-pnpm add @crup/react-timer-hook
-npm install @crup/react-timer-hook
-```
+Alpha is the only intended release channel until stable publishing is explicitly unlocked.
 
-## Planned Public API
+```sh
+npm install @crup/react-timer-hook@alpha
+pnpm add @crup/react-timer-hook@alpha
+```
 
 ```ts
-import { useTimer, useTimerGroup, durationParts } from '@crup/react-timer-hook';
+import { durationParts, useTimer, useTimerGroup } from '@crup/react-timer-hook';
 ```
 
-V1 should expose only:
+## Quick examples
 
-- `useTimer()` for one timer lifecycle.
-- `useTimerGroup()` for many keyed independent timer lifecycles.
-- `durationParts()` as a pure numeric helper.
-
-## Why This Shape
-
-Most timer libraries mix three concerns:
-
-- scheduling
-- lifecycle state
-- presentation formatting
-
-This library should only own scheduling and lifecycle mechanics.
-
-Consumers own:
-
-- countdown math
-- stopwatch display
-- clock formatting
-- timezone and locale behavior
-- API polling behavior
-- audio or notification side effects
-
-## Single Timer
+### Stopwatch
 
 ```tsx
-function Stopwatch() {
-  const timer = useTimer({
-    autoStart: false,
-    updateIntervalMs: 100,
-  });
+import { useTimer } from '@crup/react-timer-hook';
+
+export function Stopwatch() {
+  const timer = useTimer({ updateIntervalMs: 100 });
 
   return (
     <>
-      <span>{Math.floor(timer.elapsedMilliseconds / 1000)}s</span>
+      <output>{Math.floor(timer.elapsedMilliseconds / 1000)}s</output>
       <button onClick={timer.start}>Start</button>
       <button onClick={timer.pause}>Pause</button>
       <button onClick={timer.resume}>Resume</button>
       <button onClick={timer.restart}>Restart</button>
-      <button onClick={() => timer.reset()}>Reset</button>
     </>
   );
 }
 ```
 
-## Absolute Deadline Countdown
+### Absolute countdown
 
-Use this for auctions, server deadlines, reservations, or any timer where the end timestamp comes from outside the UI.
+Use `now` for wall-clock deadlines from a server, auction, reservation, or job expiry.
 
 ```tsx
-function AuctionTimer({ auctionId, expiresAt }: {
+import { useTimer } from '@crup/react-timer-hook';
+
+export function AuctionTimer({ auctionId, expiresAt }: {
   auctionId: string;
   expiresAt: number;
 }) {
@@ -86,152 +78,53 @@ function AuctionTimer({ auctionId, expiresAt }: {
 
   const remainingMs = Math.max(0, expiresAt - timer.now);
 
-  if (timer.isEnded) {
-    return <span>Auction ended</span>;
-  }
-
+  if (timer.isEnded) return <span>Auction ended</span>;
   return <span>{Math.ceil(remainingMs / 1000)}s left</span>;
 }
 ```
 
-For absolute deadlines, `pause()` pauses the local timer lifecycle and schedules, but it does not change the external server deadline. On `resume()`, the next `now` value catches up to wall time.
+### Polling with early cancel
 
-## Pausable Duration Countdown
-
-Use this when pausing should freeze the remaining duration.
-
-```tsx
-function BreakTimer() {
-  const durationMs = 5 * 60 * 1000;
-
-  const timer = useTimer({
-    autoStart: true,
-    updateIntervalMs: 1000,
-    endWhen: snapshot => snapshot.elapsedMilliseconds >= durationMs,
-  });
-
-  const remainingMs = Math.max(0, durationMs - timer.elapsedMilliseconds);
-
-  return <span>{Math.ceil(remainingMs / 1000)}s left</span>;
-}
-```
-
-## Clock
-
-```tsx
-function Clock() {
-  const timer = useTimer({
-    autoStart: true,
-    updateIntervalMs: 1000,
-  });
-
-  return <span>{new Date(timer.now).toLocaleTimeString()}</span>;
-}
-```
-
-The hook does not format time. Use native `Intl`, `Date`, or your preferred date library.
-
-## Schedules and Polling
-
-Schedules are optional side effects that run while a timer is active. They are useful for polling, audio cues, analytics pings, or other app-owned side effects.
-
-```tsx
-function AuctionTimer({ auctionId, expiresAt }: Props) {
-  const timer = useTimer({
-    autoStart: true,
-    updateIntervalMs: 1000,
-    endWhen: snapshot => snapshot.now >= expiresAt,
-    onEnd: () => api.closeAuction(auctionId),
-    schedules: [
-      {
-        id: 'poll-auction',
-        everyMs: 5000,
-        overlap: 'skip',
-        callback: async (_snapshot, controls) => {
-          const auction = await api.getAuction(auctionId);
-
-          if (auction.status === 'sold') {
-            controls.cancel('sold');
-          }
-        },
-      },
-    ],
-  });
-
-  if (timer.isCancelled) {
-    return <span>Auction closed</span>;
-  }
-
-  const remainingMs = Math.max(0, expiresAt - timer.now);
-  return <span>{Math.ceil(remainingMs / 1000)}s left</span>;
-}
-```
-
-`overlap: 'skip'` is the default because it prevents slow async callbacks from piling up.
-
-## Many Independent Timers
-
-For lists where each item has its own pause, resume, cancel, and end lifecycle, use `useTimerGroup`.
-
-```tsx
-function AuctionList({ auctions }: { auctions: Auction[] }) {
-  const timers = useTimerGroup({
-    updateIntervalMs: 1000,
-    items: auctions.map(auction => ({
-      id: auction.id,
-      autoStart: true,
-      endWhen: snapshot => snapshot.now >= auction.expiresAt,
-      onEnd: () => api.closeAuction(auction.id),
-    })),
-  });
-
-  return (
-    <>
-      {auctions.map(auction => {
-        const timer = timers.get(auction.id);
-        const remainingMs = Math.max(0, auction.expiresAt - (timer?.now ?? timers.now));
-
-        return (
-          <AuctionRow
-            key={auction.id}
-            auction={auction}
-            remainingMs={remainingMs}
-            isPaused={timer?.isPaused ?? false}
-            isEnded={timer?.isEnded ?? false}
-            onPause={() => timers.pause(auction.id)}
-            onResume={() => timers.resume(auction.id)}
-            onCancel={() => timers.cancel(auction.id, 'sold')}
-          />
-        );
-      })}
-    </>
-  );
-}
-```
-
-`useTimerGroup()` should use one scheduler internally, not one timeout loop per item.
-
-## Debug Logs
-
-Debug logging is planned for v1, but it is opt-in.
+Schedules run while the timer is active. Slow async work is skipped by default with `overlap: 'skip'`.
 
 ```tsx
 const timer = useTimer({
   autoStart: true,
   updateIntervalMs: 1000,
-  debug: event => {
-    console.debug('[timer]', event);
-  },
+  endWhen: snapshot => snapshot.now >= expiresAt,
+  schedules: [
+    {
+      id: 'auction-poll',
+      everyMs: 5000,
+      overlap: 'skip',
+      callback: async (_snapshot, controls) => {
+        const auction = await api.getAuction(auctionId);
+        if (auction.status === 'sold') controls.cancel('sold');
+      },
+    },
+  ],
 });
 ```
 
-No logs should be emitted by default.
+### Many independent timers
 
-Debug events should be semantic, for example `timer:start`, `timer:tick`, `scheduler:start`, `schedule:skip`, and `timer:end`. The library should not expose raw `setTimeout` handles.
+Use `useTimerGroup()` when every row needs its own pause, resume, cancel, restart, schedules, or `onEnd`.
 
-## Bundle Size
+```tsx
+const timers = useTimerGroup({
+  updateIntervalMs: 1000,
+  items: auctions.map(auction => ({
+    id: auction.id,
+    autoStart: true,
+    endWhen: snapshot => snapshot.now >= auction.expiresAt,
+    onEnd: () => api.closeAuction(auction.id),
+  })),
+});
+```
 
-Current local build size:
+## Bundle size
+
+Current local build:
 
 | File | Raw | Gzip | Brotli |
 | --- | ---: | ---: | ---: |
@@ -239,35 +132,33 @@ Current local build size:
 | `dist/index.cjs` | 29.18 kB | 5.08 kB | 4.50 kB |
 | `dist/index.d.ts` | 3.95 kB | 992 B | 888 B |
 
-Run this after `pnpm build`:
+CI writes a size summary to the GitHub Actions UI and posts a bundle-size comment on pull requests.
+
+## AI-friendly
+
+Agents can start with:
+
+- https://crup.github.io/react-timer-hook/llms.txt
+- https://crup.github.io/react-timer-hook/llms-full.txt
+
+Local helpers:
 
 ```sh
-pnpm size
+pnpm ai:context
+pnpm mcp:docs
 ```
 
-CI compares PR bundle size against `main` and writes a size summary to the workflow output.
+The MCP utility is repo-local and excluded from the published npm package.
 
-## Implementation Notes
+## Release policy
 
-- Use recursive `setTimeout`, not `setInterval`.
-- Never schedule timers during render.
-- Use `Date.now()` for wall-clock `now`.
-- Use `performance.now()` internally for active elapsed duration, with a `Date.now()` fallback.
-- Keep controls stable for React dependency arrays.
-- Keep latest callbacks and options in refs so rerenders do not restart the scheduler unnecessarily.
-- Guard async work with generation IDs.
-- Clean up on unmount.
-- Test with fake timers and React Strict Mode.
+- Published versions must stay `0.0.1-alpha.x` until stable release is explicitly unlocked.
+- `@alpha` is the documented install tag right now.
+- Npm requires a `latest` dist-tag, so the workflow keeps `latest` pointing at the current alpha until stable publishing is unlocked.
 
-See:
+## Links
 
-- [Requirements](./REQUIREMENTS.md)
-- [API Specification](./docs/API.md)
-- [Design Decisions](./docs/DECISIONS.md)
-- [Recipes](./docs/RECIPES.md)
-- [Branching and Commits](./docs/BRANCHING_AND_COMMITS.md)
-- [Implementation Plan](./docs/IMPLEMENTATION.md)
-- [Task Plan](./docs/TASKS.md)
-- [OSS and GTM Plan](./docs/OSS_GTM.md)
-- [Release and Docs Plan](./docs/RELEASE_AND_DOCS.md)
-- [Agent Task Cards](./docs/AGENT_TASKS.md)
+- 📚 Docs: https://crup.github.io/react-timer-hook/
+- 📦 npm: https://www.npmjs.com/package/@crup/react-timer-hook
+- 🧵 Issues: https://github.com/crup/react-timer-hook/issues
+- 🤝 Contributing: ./CONTRIBUTING.md

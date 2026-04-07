@@ -1,0 +1,41 @@
+# @crup/react-timer-hook full AI context
+
+## Install
+
+```sh
+npm install @crup/react-timer-hook@alpha
+pnpm add @crup/react-timer-hook@alpha
+```
+
+## Exports
+
+```ts
+import { durationParts, useTimer, useTimerGroup } from '@crup/react-timer-hook';
+```
+
+## useTimer
+
+```ts
+useTimer({
+  autoStart?: boolean;
+  updateIntervalMs?: number;
+  endWhen?: (snapshot: TimerSnapshot) => boolean;
+  onEnd?: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
+  schedules?: TimerSchedule[];
+  debug?: TimerDebug;
+})
+```
+
+Use `now` for wall-clock countdowns and clocks. Use `elapsedMilliseconds` for stopwatches and pausable duration countdowns.
+
+## useTimerGroup
+
+Use `useTimerGroup()` for many keyed timers that each need independent lifecycle controls.
+
+## Schedules
+
+Schedules are app-owned side effects. Default overlap behavior is `skip`.
+
+## Non-goals
+
+No formatting, no timezone handling, no mode enums, no data-fetching cache, and no raw timeout handle exposure.

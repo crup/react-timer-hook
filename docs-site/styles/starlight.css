@@ -1,0 +1,40 @@
+:root {
+  --sl-color-accent-low: #003d35;
+  --sl-color-accent: #00b894;
+  --sl-color-accent-high: #d7fff4;
+  --sl-color-white: #f8fbff;
+  --sl-color-gray-1: #e8eef7;
+  --sl-color-gray-2: #c7d0df;
+  --sl-color-gray-3: #96a3b7;
+  --sl-color-gray-4: #5e6a7d;
+  --sl-color-gray-5: #3f4858;
+  --sl-color-gray-6: #252c38;
+  --sl-color-black: #0b111c;
+}
+
+:root[data-theme='light'] {
+  --sl-color-accent-low: #d6fff4;
+  --sl-color-accent: #007d6b;
+  --sl-color-accent-high: #003d35;
+  --sl-color-white: #0c1420;
+  --sl-color-gray-1: #172033;
+  --sl-color-gray-2: #303b50;
+  --sl-color-gray-3: #66758d;
+  --sl-color-gray-4: #93a0b2;
+  --sl-color-gray-5: #d7dee9;
+  --sl-color-gray-6: #edf2f8;
+  --sl-color-gray-7: #f7faff;
+  --sl-color-black: #ffffff;
+}
+
+.hero {
+  padding-block: clamp(3rem, 8vw, 7rem);
+}
+
+.hero img {
+  filter: drop-shadow(0 24px 60px rgb(0 184 148 / 0.22));
+}
+
+.site-title {
+  font-weight: 800;
+}

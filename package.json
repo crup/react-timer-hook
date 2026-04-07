@@ -19,16 +19,20 @@
   ],
   "sideEffects": false,
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "tag": "alpha"
   },
   "engines": {
     "node": ">=25.0.0"
   },
   "scripts": {
+    "ai:context": "node scripts/ai-context.mjs",
     "build": "tsup",
     "changeset": "changeset",
-    "docs:api": "typedoc --out docs-api src/index.ts",
-    "docs:build": "pnpm docs:api",
+    "docs:build": "astro build",
+    "docs:dev": "astro dev",
+    "docs:preview": "astro preview",
+    "mcp:docs": "node mcp/server.mjs",
     "prepare": "husky",
     "readme:check": "node scripts/check-readme.mjs",
     "release": "changeset publish",
@@ -43,7 +47,10 @@
     "hook",
     "timer",
     "stopwatch",
-    "time"
+    "time",
+    "countdown",
+    "scheduler",
+    "react-hooks"
   ],
   "author": "Rajender Joshi <connect@rajender.pro>",
   "license": "MIT",
@@ -53,6 +60,7 @@
     "react": ">=18.0.0"
   },
   "devDependencies": {
+    "@astrojs/starlight": "^0.38.2",
     "@changesets/cli": "^2.29.7",
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
@@ -61,12 +69,12 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.2",
+    "astro": "^6.1.4",
     "husky": "^9.1.7",
     "jsdom": "^27.3.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "tsup": "^8.5.1",
-    "typedoc": "^0.28.15",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"
   }

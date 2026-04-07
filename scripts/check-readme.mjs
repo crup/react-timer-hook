@@ -6,9 +6,10 @@ const required = [
   'useTimer',
   'useTimerGroup',
   'durationParts',
-  './docs/API.md',
-  './docs/TASKS.md',
-  './docs/RECIPES.md',
+  'https://crup.github.io/react-timer-hook/',
+  '@crup/react-timer-hook@alpha',
+  'Bundle size',
+  'AI-friendly',
 ];
 
 const missing = required.filter(value => !readme.includes(value));

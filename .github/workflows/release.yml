@@ -2,6 +2,11 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      confirm_stable_release:
+        description: Type "publish-stable" to publish the latest dist-tag.
+        required: true
+        default: alpha-only
 
 permissions:
   contents: write
@@ -14,6 +19,7 @@ concurrency:
 
 jobs:
   release:
+    if: github.ref_name == 'main' && inputs.confirm_stable_release == 'publish-stable'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -47,3 +53,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  stable-release-locked:
+    if: inputs.confirm_stable_release != 'publish-stable'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Stable release is locked
+        run: |
+          echo "Stable npm publishing is disabled by default."
+          echo "Use the Prerelease workflow for alpha releases."
+          echo "To intentionally publish latest, rerun this workflow with confirm_stable_release=publish-stable on main."

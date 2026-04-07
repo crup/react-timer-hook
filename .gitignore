@@ -129,6 +129,8 @@ out
 .nuxt
 dist
 docs-api
+docs-dist
+.astro
 
 # Gatsby files
 .cache/
