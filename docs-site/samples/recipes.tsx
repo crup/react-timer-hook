@@ -346,13 +346,12 @@ export function ManyDisplayCountdownsSample() {
           const remainingMs = Math.max(0, deadline - clock.now);
           const total = [12_000, 24_000, 36_000, 48_000][index];
           return (
-            <div key={deadline} className="sample-row-card">
-              <div>
-                <strong>Lot {index + 1}</strong>
-                <span>{formatClock(remainingMs)} left</span>
-              </div>
-              <Progress value={100 - (remainingMs / total) * 100} compact />
-            </div>
+            <SampleRow
+              key={deadline}
+              title={`Lot ${index + 1}`}
+              meta={`${formatClock(remainingMs)} left`}
+              progress={<Progress value={100 - (remainingMs / total) * 100} compact />}
+            />
           );
         })}
       </div>
@@ -379,18 +378,19 @@ export function TimerGroupSample() {
           const timer = timers.get(id);
           const total = [20_000, 30_000, 40_000][index];
           return (
-            <div key={id} className="sample-row-card">
-              <div>
-                <strong>{id}</strong>
-                <span>{timer ? formatElapsed(timer.elapsedMilliseconds) : 'removed'} · {timer?.status}</span>
-              </div>
-              <Progress value={timer ? Math.min(100, (timer.elapsedMilliseconds / total) * 100) : 0} compact tone={timer?.isEnded ? 'complete' : 'active'} />
-              <div className="sample-mini-controls">
-                <ActionButton onClick={() => timers.pause(id)} disabled={!timer?.isRunning} label="Pause" tone="secondary" small />
-                <ActionButton onClick={() => timers.resume(id)} disabled={!timer?.isPaused} label="Resume" small />
-                <ActionButton onClick={() => timers.restart(id)} label="Restart" small />
-              </div>
-            </div>
+            <SampleRow
+              key={id}
+              title={id}
+              meta={`${timer ? formatElapsed(timer.elapsedMilliseconds) : 'removed'} · ${timer?.status ?? '-'}`}
+              progress={<Progress value={timer ? Math.min(100, (timer.elapsedMilliseconds / total) * 100) : 0} compact tone={timer?.isEnded ? 'complete' : 'active'} />}
+              actions={
+                <>
+                  <ActionButton onClick={() => timers.pause(id)} disabled={!timer?.isRunning} label="Pause" tone="secondary" small />
+                  <ActionButton onClick={() => timers.resume(id)} disabled={!timer?.isPaused} label="Resume" small />
+                  <ActionButton onClick={() => timers.restart(id)} label="Restart" small />
+                </>
+              }
+            />
           );
         })}
       </div>
@@ -411,12 +411,11 @@ export function GroupControlsSample() {
         {timers.ids.map(id => {
           const timer = timers.get(id);
           return (
-            <div key={id} className="sample-row-card">
-              <div>
-                <strong>{id}</strong>
-                <span>{timer?.status} · {timer ? formatElapsed(timer.elapsedMilliseconds) : '-'}</span>
-              </div>
-            </div>
+            <SampleRow
+              key={id}
+              title={id}
+              meta={`${timer?.status ?? '-'} · ${timer ? formatElapsed(timer.elapsedMilliseconds) : '-'}`}
+            />
           );
         })}
       </div>
@@ -454,18 +453,19 @@ export function CheckoutHoldsSample() {
           const timer = timers.get(hold.id);
           const remainingMs = Math.max(0, hold.durationMs - (timer?.elapsedMilliseconds ?? 0));
           return (
-            <div key={hold.id} className="sample-row-card">
-              <div>
-                <strong>{hold.label}</strong>
-                <span>{timer?.isEnded ? 'expired' : `${formatClock(remainingMs)} left`} · {timer?.status}</span>
-              </div>
-              <Progress value={100 - (remainingMs / hold.durationMs) * 100} compact tone={timer?.isEnded ? 'complete' : 'active'} />
-              <div className="sample-mini-controls">
-                <ActionButton onClick={() => timers.pause(hold.id)} disabled={!timer?.isRunning} label="Pause" small tone="secondary" />
-                <ActionButton onClick={() => timers.resume(hold.id)} disabled={!timer?.isPaused} label="Resume" small />
-                <ActionButton onClick={() => timers.restart(hold.id)} label="Extend" small />
-              </div>
-            </div>
+            <SampleRow
+              key={hold.id}
+              title={hold.label}
+              meta={`${timer?.isEnded ? 'expired' : `${formatClock(remainingMs)} left`} · ${timer?.status ?? '-'}`}
+              progress={<Progress value={100 - (remainingMs / hold.durationMs) * 100} compact tone={timer?.isEnded ? 'complete' : 'active'} />}
+              actions={
+                <>
+                  <ActionButton onClick={() => timers.pause(hold.id)} disabled={!timer?.isRunning} label="Pause" small tone="secondary" />
+                  <ActionButton onClick={() => timers.resume(hold.id)} disabled={!timer?.isPaused} label="Resume" small />
+                  <ActionButton onClick={() => timers.restart(hold.id)} label="Extend" small />
+                </>
+              }
+            />
           );
         })}
       </div>
@@ -497,16 +497,17 @@ export function PerItemPollingSample() {
         {timers.ids.map(id => {
           const timer = timers.get(id);
           return (
-            <div key={id} className="sample-row-card">
-              <div>
-                <strong>{id}</strong>
-                <span>{checks[id] ?? 0} status checks · {timer?.status}</span>
-              </div>
-              <div className="sample-mini-controls">
-                <ActionButton onClick={() => timers.pause(id)} disabled={!timer?.isRunning} label="Pause" small tone="secondary" />
-                <ActionButton onClick={() => timers.resume(id)} disabled={!timer?.isPaused} label="Resume" small />
-              </div>
-            </div>
+            <SampleRow
+              key={id}
+              title={id}
+              meta={`${checks[id] ?? 0} status checks · ${timer?.status ?? '-'}`}
+              actions={
+                <>
+                  <ActionButton onClick={() => timers.pause(id)} disabled={!timer?.isRunning} label="Pause" small tone="secondary" />
+                  <ActionButton onClick={() => timers.resume(id)} disabled={!timer?.isPaused} label="Resume" small />
+                </>
+              }
+            />
           );
         })}
       </div>
@@ -531,13 +532,12 @@ export function DynamicItemsSample() {
         {timers.ids.map(id => {
           const timer = timers.get(id);
           return (
-            <div key={id} className="sample-row-card">
-              <div>
-                <strong>{id}</strong>
-                <span>{timer ? formatElapsed(timer.elapsedMilliseconds) : '-'} · {timer?.status}</span>
-              </div>
-              <ActionButton onClick={() => timers.remove(id)} label="Remove" small tone="secondary" />
-            </div>
+            <SampleRow
+              key={id}
+              title={id}
+              meta={`${timer ? formatElapsed(timer.elapsedMilliseconds) : '-'} · ${timer?.status ?? '-'}`}
+              actions={<ActionButton onClick={() => timers.remove(id)} label="Remove" small tone="secondary" />}
+            />
           );
         })}
       </div>
@@ -567,23 +567,24 @@ export function ToastAutoDismissSample() {
   return (
     <DemoShell eyebrow="Toast expiry" title={`${timers.size} visible`} status={timers.size ? 'running' : 'idle'}>
       <div className="sample-board">
-        {timers.ids.length === 0 ? <p className="sample-muted">Add a toast and pause it like a hover interaction.</p> : null}
+        {timers.ids.length === 0 ? <p className="sample-muted">Add a toast and pause its dismiss timer.</p> : null}
         {timers.ids.map(id => {
           const timer = timers.get(id);
           const remainingMs = Math.max(0, 5000 - (timer?.elapsedMilliseconds ?? 0));
           return (
-            <div key={id} className="sample-row-card">
-              <div>
-                <strong>{id}</strong>
-                <span>{formatClock(remainingMs)} before dismiss · {timer?.status}</span>
-              </div>
-              <Progress value={100 - (remainingMs / 5000) * 100} compact tone="warning" />
-              <div className="sample-mini-controls">
-                <ActionButton onClick={() => timers.pause(id)} disabled={!timer?.isRunning} label="Hover pause" small tone="secondary" />
-                <ActionButton onClick={() => timers.resume(id)} disabled={!timer?.isPaused} label="Resume" small />
-                <ActionButton onClick={() => timers.remove(id)} label="Dismiss" small tone="danger" />
-              </div>
-            </div>
+            <SampleRow
+              key={id}
+              title={id}
+              meta={`${formatClock(remainingMs)} before dismiss · ${timer?.status ?? '-'}`}
+              progress={<Progress value={100 - (remainingMs / 5000) * 100} compact tone="warning" />}
+              actions={
+                <>
+                  <ActionButton onClick={() => timers.pause(id)} disabled={!timer?.isRunning} label="Pause dismiss" small tone="secondary" />
+                  <ActionButton onClick={() => timers.resume(id)} disabled={!timer?.isPaused} label="Resume" small />
+                  <ActionButton onClick={() => timers.remove(id)} label="Dismiss" small tone="danger" />
+                </>
+              }
+            />
           );
         })}
       </div>
@@ -623,6 +624,29 @@ function TimerControlsPanel({
       {show.restart ? <ActionButton onClick={timer.restart} label="Restart" /> : null}
       {show.reset ? <ActionButton onClick={timer.reset} disabled={timer.isIdle} label="Reset" tone="secondary" /> : null}
       {show.cancel ? <ActionButton onClick={() => timer.cancel('manual-cancel')} disabled={!timer.isRunning && !timer.isPaused} label="Cancel" tone="danger" /> : null}
+    </div>
+  );
+}
+
+function SampleRow({
+  title,
+  meta,
+  progress,
+  actions,
+}: {
+  title: string;
+  meta: string;
+  progress?: React.ReactNode;
+  actions?: React.ReactNode;
+}) {
+  return (
+    <div className="sample-row-card">
+      <div>
+        <strong>{title}</strong>
+        <span>{meta}</span>
+      </div>
+      <div className="sample-row-card__progress">{progress}</div>
+      <div className="sample-mini-controls">{actions}</div>
     </div>
   );
 }
