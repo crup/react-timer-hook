@@ -57,5 +57,7 @@ For the first stable release, use:
 ```txt
 confirm_stable_release=publish-stable
 version_bump=patch
-stable_version=
+stable_version=0.0.1
 ```
+
+The `stable_version` field can keep its default value when `version_bump` is `patch`, `minor`, or `major`; it is ignored unless the strategy is `manual`.
