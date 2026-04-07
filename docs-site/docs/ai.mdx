@@ -1,0 +1,65 @@
+---
+title: AI-first usage
+description: Configure llms.txt context and the local MCP documentation server for coding agents.
+---
+
+# AI-first usage
+
+End users do not need AI files to use the hook.
+
+These files exist for coding agents, docs-aware IDEs, and MCP clients that can consume project context before writing code.
+
+## Hosted context
+
+Add these URLs to tools that support URL context:
+
+```txt
+https://crup.github.io/react-timer-hook/llms.txt
+https://crup.github.io/react-timer-hook/llms-full.txt
+```
+
+Use `llms.txt` for short context. Use `llms-full.txt` when the tool can ingest API and recipe notes.
+
+## Local JSON context
+
+```sh
+pnpm install
+pnpm ai:context
+```
+
+## MCP server
+
+Run the local docs MCP server:
+
+```sh
+node /absolute/path/to/react-timer-hook/mcp/server.mjs
+```
+
+MCP client config:
+
+```json
+{
+  "mcpServers": {
+    "react-timer-hook-docs": {
+      "command": "node",
+      "args": ["/absolute/path/to/react-timer-hook/mcp/server.mjs"]
+    }
+  }
+}
+```
+
+It exposes:
+
+```txt
+react-timer-hook://package
+react-timer-hook://api
+react-timer-hook://recipes
+```
+
+Verify locally:
+
+```sh
+printf '{"jsonrpc":"2.0","id":1,"method":"resources/list"}\n' | pnpm mcp:docs
+```
+
+The MCP utility is repo-local and excluded from the npm package.

@@ -13,34 +13,56 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: 1. Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: 2. Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10.30.2
 
-      - name: Setup Node
+      - name: 3. Setup Node 25
         uses: actions/setup-node@v4
         with:
           node-version: 25
           cache: pnpm
 
-      - name: Install
+      - name: 4. Install dependencies
+        id: install
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
+      - name: 5. Typecheck library
+        id: typecheck
         run: pnpm typecheck
 
-      - name: Test
+      - name: 6. Run tests
+        id: test
         run: pnpm test
 
-      - name: Build
+      - name: 7. Build package
+        id: build
         run: pnpm build
 
-      - name: Build docs
+      - name: 8. Build Docusaurus docs
+        id: docs
         run: pnpm docs:build
 
-      - name: Check README
+      - name: 9. Check README
+        id: readme
         run: pnpm readme:check
+
+      - name: CI summary
+        if: always()
+        run: |
+          {
+            echo "## CI pipeline"
+            echo
+            echo "| Stage | Result |"
+            echo "| --- | --- |"
+            echo "| Install | ${{ steps.install.outcome }} |"
+            echo "| Typecheck | ${{ steps.typecheck.outcome }} |"
+            echo "| Tests | ${{ steps.test.outcome }} |"
+            echo "| Package build | ${{ steps.build.outcome }} |"
+            echo "| Docs build | ${{ steps.docs.outcome }} |"
+            echo "| README check | ${{ steps.readme.outcome }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -12,6 +12,16 @@
 
 📚 Docs: https://crup.github.io/react-timer-hook/
 
+## Docs and live examples
+
+The documentation site is built with Docusaurus and includes live React playgrounds for 15 recipes:
+
+- Basic: clock, stopwatch, absolute countdown, pausable countdown, manual controls
+- Intermediate: once-only `onEnd`, polling, poll-and-cancel, backend events, debug logs
+- Advanced: many display timers, timer groups, global controls, per-item polling, dynamic items
+
+Open: https://crup.github.io/react-timer-hook/
+
 ## Why it is different
 
 Most timer libraries mix scheduling, lifecycle, formatting, and app behavior. This package keeps the core small:
@@ -136,12 +146,43 @@ CI writes a size summary to the GitHub Actions UI and posts a bundle-size commen
 
 ## AI-friendly
 
-Agents can start with:
+End users do not need these files. They are for coding agents, docs-aware IDEs, and MCP clients.
+
+### MCP setup
+
+Clone the repo, install dependencies, and point your MCP client at the local stdio server:
+
+```sh
+git clone https://github.com/crup/react-timer-hook.git
+cd react-timer-hook
+pnpm install
+```
+
+```json
+{
+  "mcpServers": {
+    "react-timer-hook-docs": {
+      "command": "node",
+      "args": ["/absolute/path/to/react-timer-hook/mcp/server.mjs"]
+    }
+  }
+}
+```
+
+The MCP server exposes:
+
+```txt
+react-timer-hook://package
+react-timer-hook://api
+react-timer-hook://recipes
+```
+
+Agents can use hosted context:
 
 - https://crup.github.io/react-timer-hook/llms.txt
 - https://crup.github.io/react-timer-hook/llms-full.txt
 
-Local helpers:
+Local MCP/docs helpers:
 
 ```sh
 pnpm ai:context

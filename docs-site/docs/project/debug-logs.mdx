@@ -3,6 +3,8 @@ title: Debug logs
 description: Opt-in semantic diagnostics for timer lifecycles and schedules.
 ---
 
+# Debug logs
+
 Debug logs are off by default.
 
 ```tsx
@@ -16,21 +18,6 @@ useTimer({
 });
 ```
 
-Debug events are semantic:
-
-- `timer:start`
-- `timer:pause`
-- `timer:resume`
-- `timer:reset`
-- `timer:restart`
-- `timer:cancel`
-- `timer:end`
-- `scheduler:start`
-- `scheduler:stop`
-- `schedule:start`
-- `schedule:skip`
-- `schedule:end`
-- `schedule:error`
-- `callback:error`
+Debug events are semantic: `timer:start`, `timer:pause`, `timer:resume`, `timer:reset`, `timer:restart`, `timer:cancel`, `timer:end`, `scheduler:start`, `scheduler:stop`, `schedule:start`, `schedule:skip`, `schedule:end`, `schedule:error`, and `callback:error`.
 
 Raw timeout handles are not exposed.

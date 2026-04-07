@@ -1,0 +1,69 @@
+---
+title: useTimer
+description: API reference for a single deterministic timer lifecycle.
+---
+
+# useTimer
+
+```ts
+function useTimer(options?: UseTimerOptions): TimerSnapshot & TimerControls;
+```
+
+## Options
+
+```ts
+type UseTimerOptions = {
+  autoStart?: boolean;
+  updateIntervalMs?: number;
+  endWhen?: (snapshot: TimerSnapshot) => boolean;
+  onEnd?: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
+  schedules?: TimerSchedule[];
+  debug?: TimerDebug;
+};
+```
+
+`updateIntervalMs` defaults to `1000` and must be positive and finite.
+
+`endWhen` ends the lifecycle when it returns `true`.
+
+`onEnd` fires once per generation. `restart()` creates a new generation.
+
+Schedules run while active and default to `overlap: 'skip'`.
+
+## Controls
+
+```ts
+type TimerControls = {
+  start(): void;
+  pause(): void;
+  resume(): void;
+  reset(options?: { autoStart?: boolean }): void;
+  restart(): void;
+  cancel(reason?: string): void;
+};
+```
+
+`cancel(reason)` is a terminal early stop and does not call `onEnd`.
+
+## Snapshot
+
+```ts
+type TimerSnapshot = {
+  status: 'idle' | 'running' | 'paused' | 'ended' | 'cancelled';
+  now: number;
+  tick: number;
+  startedAt: number | null;
+  pausedAt: number | null;
+  endedAt: number | null;
+  cancelledAt: number | null;
+  cancelReason: string | null;
+  elapsedMilliseconds: number;
+  isIdle: boolean;
+  isRunning: boolean;
+  isPaused: boolean;
+  isEnded: boolean;
+  isCancelled: boolean;
+};
+```
+
+Use `now` for wall-clock math. Use `elapsedMilliseconds` for active elapsed duration.

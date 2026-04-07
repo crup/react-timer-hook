@@ -3,6 +3,8 @@ title: Types
 description: Public TypeScript types exported by the package.
 ---
 
+# Types
+
 ## Duration parts
 
 ```ts
@@ -21,7 +23,6 @@ type DurationParts = {
 import { durationParts } from '@crup/react-timer-hook';
 
 const parts = durationParts(90_500);
-// { totalSeconds: 90, minutes: 1, seconds: 30, milliseconds: 500, ... }
 ```
 
 ## Schedules
@@ -36,9 +37,9 @@ type TimerSchedule = {
 };
 ```
 
-Default overlap behavior is `skip`.
-
 ## Debug
+
+Debug is opt-in. The package does not emit logs by default.
 
 ```ts
 type TimerDebug =
@@ -50,8 +51,4 @@ type TimerDebug =
       includeTicks?: boolean;
       label?: string;
     };
-
-type TimerDebugLogger = (event: TimerDebugEvent) => void;
 ```
-
-Debug is opt-in. The package does not emit logs by default.

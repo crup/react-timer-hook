@@ -131,6 +131,8 @@ dist
 docs-api
 docs-dist
 .astro
+docs-site/.docusaurus
+docs-site/build
 
 # Gatsby files
 .cache/

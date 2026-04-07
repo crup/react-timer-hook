@@ -1,9 +1,11 @@
 ---
 title: Contributing
-description: How to contribute changes without breaking the release and timer guarantees.
+description: How to contribute changes without breaking release and timer guarantees.
 ---
 
-## Local checks
+# Contributing
+
+Run the local checks before opening a PR:
 
 ```sh
 pnpm test
@@ -14,18 +16,16 @@ pnpm size
 pnpm readme:check
 ```
 
-## Commit style
-
 Use Conventional Commits:
 
 ```txt
 feat(timer): add lifecycle option
 fix(group): preserve item state across rerenders
-docs(readme): refresh alpha install instructions
+docs(docs): refresh recipe playgrounds
 ci(size): post bundle report to pull requests
 ```
 
-## Timer rules
+Timer rules:
 
 - Do not schedule work during render.
 - Use recursive `setTimeout`, not `setInterval`.

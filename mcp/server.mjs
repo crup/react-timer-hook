@@ -21,7 +21,7 @@ const resources = {
   'react-timer-hook://api': {
     name: 'API',
     mimeType: 'text/markdown',
-    text: readFileSync(new URL('../public/llms-full.txt', import.meta.url), 'utf8'),
+    text: readFileSync(new URL('../docs-site/static/llms-full.txt', import.meta.url), 'utf8'),
   },
   'react-timer-hook://recipes': {
     name: 'Recipes',
