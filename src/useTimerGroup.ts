@@ -235,6 +235,25 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
     [callOnEnd, emit, evaluateItemSchedules],
   );
 
+  const getNextDelay = useCallback((clock = readClock()) => {
+    const updateIntervalMs = optionsRef.current.updateIntervalMs ?? 1000;
+    let nextDelay = updateIntervalMs;
+
+    for (const item of itemsRef.current.values()) {
+      if (item.state.status !== 'running') continue;
+
+      const schedules = item.definition.schedules ?? [];
+      schedules.forEach((schedule, index) => {
+        const key = schedule.id ?? String(index);
+        const scheduleState = item.schedules.get(key);
+        const lastRunAt = scheduleState?.lastRunAt ?? item.state.startedAt ?? clock.wallNow;
+        nextDelay = Math.min(nextDelay, Math.max(1, lastRunAt + schedule.everyMs - clock.wallNow));
+      });
+    }
+
+    return nextDelay;
+  }, []);
+
   const ensureItem = useCallback((definition: TimerGroupItem): { item: InternalGroupItem; added: boolean } => {
     const existing = itemsRef.current.get(definition.id);
     if (existing) {
@@ -401,7 +420,7 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
       }
 
       rerender();
-    }, optionsRef.current.updateIntervalMs ?? 1000);
+    }, getNextDelay());
 
     return () => {
       if (timeoutRef.current !== null) {
@@ -410,7 +429,7 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
       clearScheduledTick();
       mountedRef.current = false;
     };
-  }, [activeSignature, clearScheduledTick, emit, processItem]);
+  }, [activeSignature, clearScheduledTick, emit, getNextDelay, processItem]);
 
   const get = useCallback(
     (id: string) => {
@@ -422,6 +441,12 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
   );
 
   const now = readClock().wallNow;
+  const startAll = useCallback(() => Array.from(itemsRef.current.keys()).forEach(start), [start]);
+  const pauseAll = useCallback(() => Array.from(itemsRef.current.keys()).forEach(pause), [pause]);
+  const resumeAll = useCallback(() => Array.from(itemsRef.current.keys()).forEach(resume), [resume]);
+  const resetAll = useCallback((resetOptions?: { autoStart?: boolean }) => Array.from(itemsRef.current.keys()).forEach(id => reset(id, resetOptions)), [reset]);
+  const restartAll = useCallback(() => Array.from(itemsRef.current.keys()).forEach(restart), [restart]);
+  const cancelAll = useCallback((reason?: string) => Array.from(itemsRef.current.keys()).forEach(id => cancel(id, reason)), [cancel]);
 
   return useMemo(
     () => ({
@@ -439,14 +464,14 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
       reset,
       restart,
       cancel,
-      startAll: () => Array.from(itemsRef.current.keys()).forEach(start),
-      pauseAll: () => Array.from(itemsRef.current.keys()).forEach(pause),
-      resumeAll: () => Array.from(itemsRef.current.keys()).forEach(resume),
-      resetAll: (resetOptions?: { autoStart?: boolean }) => Array.from(itemsRef.current.keys()).forEach(id => reset(id, resetOptions)),
-      restartAll: () => Array.from(itemsRef.current.keys()).forEach(restart),
-      cancelAll: (reason?: string) => Array.from(itemsRef.current.keys()).forEach(id => cancel(id, reason)),
+      startAll,
+      pauseAll,
+      resumeAll,
+      resetAll,
+      restartAll,
+      cancelAll,
     }),
-    [add, cancel, clear, get, now, pause, remove, reset, restart, resume, start, update],
+    [add, cancel, cancelAll, clear, get, now, pause, pauseAll, remove, reset, resetAll, restart, restartAll, resume, resumeAll, start, startAll, update],
   );
 }
 

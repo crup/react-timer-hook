@@ -44,4 +44,33 @@ describe('useTimerGroup schedules and debug', () => {
     expect(result.current.get('0')?.tick).toBe(1);
     expect(result.current.get('99')?.tick).toBe(1);
   });
+
+  it('keeps group control method identities stable across rerenders and ticks', () => {
+    const items = [{ id: 'a', autoStart: true }];
+    const { result, rerender } = renderHook(() => useTimerGroup({ updateIntervalMs: 100, items }));
+    const controls = {
+      start: result.current.start,
+      pause: result.current.pause,
+      resume: result.current.resume,
+      reset: result.current.reset,
+      restart: result.current.restart,
+      cancel: result.current.cancel,
+      pauseAll: result.current.pauseAll,
+      resumeAll: result.current.resumeAll,
+      restartAll: result.current.restartAll,
+    };
+
+    rerender();
+    act(() => vi.advanceTimersByTime(100));
+
+    expect(result.current.start).toBe(controls.start);
+    expect(result.current.pause).toBe(controls.pause);
+    expect(result.current.resume).toBe(controls.resume);
+    expect(result.current.reset).toBe(controls.reset);
+    expect(result.current.restart).toBe(controls.restart);
+    expect(result.current.cancel).toBe(controls.cancel);
+    expect(result.current.pauseAll).toBe(controls.pauseAll);
+    expect(result.current.resumeAll).toBe(controls.resumeAll);
+    expect(result.current.restartAll).toBe(controls.restartAll);
+  });
 });

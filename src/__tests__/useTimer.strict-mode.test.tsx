@@ -24,6 +24,38 @@ describe('useTimer rerender and Strict Mode behavior', () => {
     expect(result.current.tick).toBe(1);
   });
 
+  it('keeps control method identities stable across rerenders and ticks', () => {
+    const { result, rerender } = renderHook(() => useTimer({ autoStart: true, updateIntervalMs: 100 }));
+    const controls = {
+      start: result.current.start,
+      pause: result.current.pause,
+      resume: result.current.resume,
+      reset: result.current.reset,
+      restart: result.current.restart,
+      cancel: result.current.cancel,
+    };
+
+    rerender();
+    act(() => vi.advanceTimersByTime(100));
+
+    expect(result.current.start).toBe(controls.start);
+    expect(result.current.pause).toBe(controls.pause);
+    expect(result.current.resume).toBe(controls.resume);
+    expect(result.current.reset).toBe(controls.reset);
+    expect(result.current.restart).toBe(controls.restart);
+    expect(result.current.cancel).toBe(controls.cancel);
+  });
+
+  it('does not delay the active timeout on parent rerender', () => {
+    const { result, rerender } = renderHook(() => useTimer({ autoStart: true, updateIntervalMs: 100 }));
+
+    act(() => vi.advanceTimersByTime(50));
+    rerender();
+    act(() => vi.advanceTimersByTime(50));
+
+    expect(result.current.tick).toBe(1);
+  });
+
   it('Strict Mode does not duplicate onEnd', () => {
     const onEnd = vi.fn();
     renderHook(

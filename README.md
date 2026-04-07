@@ -139,8 +139,8 @@ Current build:
 
 | File | Raw | Gzip | Brotli |
 | --- | ---: | ---: | ---: |
-| `dist/index.js` | 11.82 kB | 3.55 kB | 3.20 kB |
-| `dist/index.cjs` | 12.94 kB | 3.79 kB | 3.42 kB |
+| `dist/index.js` | 12.45 kB | 3.75 kB | 3.36 kB |
+| `dist/index.cjs` | 13.69 kB | 4.01 kB | 3.60 kB |
 | `dist/index.d.ts` | 3.95 kB | 992 B | 888 B |
 
 CI writes a size summary to the GitHub Actions UI and posts bundle-size reports on pull requests.

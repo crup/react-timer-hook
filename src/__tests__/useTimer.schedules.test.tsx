@@ -96,4 +96,40 @@ describe('useTimer schedules', () => {
     await act(async () => {});
     expect(callback).toHaveBeenCalledTimes(3);
   });
+
+  it('uses the latest schedule callback without restarting the timer', async () => {
+    const firstCallback = vi.fn();
+    const secondCallback = vi.fn();
+    const { rerender } = renderHook(({ callback }) =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        schedules: [{ id: 'poll', everyMs: 100, callback }],
+      }),
+      { initialProps: { callback: firstCallback } },
+    );
+
+    rerender({ callback: secondCallback });
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(firstCallback).not.toHaveBeenCalled();
+    expect(secondCallback).toHaveBeenCalledTimes(1);
+  });
+
+  it('checks schedule cadence independently from render update interval', async () => {
+    const callback = vi.fn();
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 1000,
+        schedules: [{ id: 'fast-poll', everyMs: 100, callback }],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
 });

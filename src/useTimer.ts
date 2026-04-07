@@ -199,6 +199,24 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
     [callOnEnd, clearScheduledTick, emit, evaluateSchedules],
   );
 
+  const getNextDelay = useCallback((clock = readClock()) => {
+    const updateIntervalMs = optionsRef.current.updateIntervalMs ?? 1000;
+    let nextDelay = updateIntervalMs;
+
+    const state = stateRef.current!;
+    if (state.status !== 'running') return updateIntervalMs;
+
+    const schedules = optionsRef.current.schedules ?? [];
+    schedules.forEach((schedule, index) => {
+      const key = schedule.id ?? String(index);
+      const scheduleState = schedulesRef.current.get(key);
+      const lastRunAt = scheduleState?.lastRunAt ?? state.startedAt ?? clock.wallNow;
+      nextDelay = Math.min(nextDelay, Math.max(1, lastRunAt + schedule.everyMs - clock.wallNow));
+    });
+
+    return nextDelay;
+  }, []);
+
   const start = useCallback(() => {
     const clock = readClock();
     if (!startTimerState(stateRef.current!, clock)) return;
@@ -305,7 +323,7 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
       emit('timer:tick', tickSnapshot);
       processRunningState(clock);
       rerender();
-    }, optionsRef.current.updateIntervalMs ?? 1000);
+    }, getNextDelay());
 
     return () => {
       if (timeoutRef.current !== null) {
@@ -313,7 +331,7 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
       }
       clearScheduledTick();
     };
-  }, [clearScheduledTick, emit, generation, getSnapshot, processRunningState, snapshot.tick, status]);
+  }, [clearScheduledTick, emit, generation, getNextDelay, getSnapshot, processRunningState, snapshot.tick, status]);
 
   return {
     ...snapshot,
