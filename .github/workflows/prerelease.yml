@@ -54,7 +54,7 @@ jobs:
           PACKAGE_VERSION: ${{ inputs.version_base }}-${{ inputs.tag }}.${{ github.run_number }}
         run: |
           node -e "const fs = require('node:fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); pkg.version = process.env.PACKAGE_VERSION; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');"
-          node -e "const pkg = require('./package.json'); console.log(`${pkg.name}@${pkg.version}`);"
+          node -e "const pkg = require('./package.json'); console.log(pkg.name + '@' + pkg.version);"
 
       - name: Build package
         run: |
@@ -63,6 +63,15 @@ jobs:
 
       - name: Publish prerelease
         run: pnpm publish --tag "${{ inputs.tag }}" --access public --no-git-checks
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Remove stable latest tag from prerelease
+        if: inputs.tag != 'latest'
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          npm dist-tag rm "$PACKAGE_NAME" latest || true
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
