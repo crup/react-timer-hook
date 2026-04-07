@@ -1,6 +1,6 @@
 # @crup/react-timer-hook
 
-> Reliable React timer hooks for countdowns, stopwatches, clocks, polling schedules, and many independent timer lifecycles.
+> React timer hooks for countdowns, stopwatches, clocks, polling schedules, and many independent timer lifecycles.
 
 [![npm alpha](https://img.shields.io/npm/v/%40crup%2Freact-timer-hook/alpha?label=npm%20alpha&color=00b894)](https://www.npmjs.com/package/@crup/react-timer-hook?activeTab=versions)
 [![npm downloads](https://img.shields.io/npm/dm/%40crup%2Freact-timer-hook?color=0f766e)](https://www.npmjs.com/package/@crup/react-timer-hook)
