@@ -1,30 +1,29 @@
-import type { TimerDebug, TimerDebugEvent, TimerDebugLogger, TimerSnapshot } from './types';
+import type { TimerDiagnostics, TimerDiagnosticsEvent, TimerDiagnosticsLogger, TimerSnapshot } from './types';
 
 type DebugConfig = {
   enabled: boolean;
   includeTicks: boolean;
   label?: string;
-  logger?: TimerDebugLogger;
+  logger?: TimerDiagnosticsLogger;
 };
 
-export function resolveDebug(debug: TimerDebug | undefined): DebugConfig {
-  if (!debug) return { enabled: false, includeTicks: false };
-  if (debug === true) return { enabled: true, includeTicks: false, logger: console.debug };
-  if (typeof debug === 'function') return { enabled: true, includeTicks: false, logger: debug };
+export function resolveDiagnostics(diagnostics: TimerDiagnostics | undefined): DebugConfig {
+  if (!diagnostics) return { enabled: false, includeTicks: false };
+  if (typeof diagnostics === 'function') return { enabled: true, includeTicks: false, logger: diagnostics };
 
   return {
-    enabled: debug.enabled !== false,
-    includeTicks: debug.includeTicks ?? false,
-    label: debug.label,
-    logger: debug.logger ?? console.debug,
+    enabled: diagnostics.enabled !== false,
+    includeTicks: diagnostics.includeTicks ?? false,
+    label: diagnostics.label,
+    logger: diagnostics.logger,
   };
 }
 
-export function emitDebug(
-  debug: TimerDebug | undefined,
-  event: Omit<TimerDebugEvent, 'label'> & { label?: string },
+export function emitDiagnostics(
+  diagnostics: TimerDiagnostics | undefined,
+  event: Omit<TimerDiagnosticsEvent, 'label'> & { label?: string },
 ): void {
-  const config = resolveDebug(debug);
+  const config = resolveDiagnostics(diagnostics);
   if (!config.enabled || !config.logger) return;
   if (event.type === 'timer:tick' && !config.includeTicks) return;
 
@@ -37,7 +36,7 @@ export function emitDebug(
 export function baseDebugEvent(
   snapshot: TimerSnapshot,
   generation: number,
-): Pick<TimerDebugEvent, 'generation' | 'tick' | 'now' | 'elapsedMilliseconds' | 'status'> {
+): Pick<TimerDiagnosticsEvent, 'generation' | 'tick' | 'now' | 'elapsedMilliseconds' | 'status'> {
   return {
     generation,
     tick: snapshot.tick,

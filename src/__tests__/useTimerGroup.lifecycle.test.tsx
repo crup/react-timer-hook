@@ -58,6 +58,42 @@ describe('useTimerGroup lifecycle', () => {
     expect(result.current.get('b')?.cancelReason).toBe('manual');
   });
 
+  it('checks end conditions immediately for auto-started items', () => {
+    const onEnd = vi.fn();
+    const { result } = renderHook(() =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        items: [{ id: 'a', autoStart: true, endWhen: snapshot => snapshot.now >= 0, onEnd }],
+      }),
+    );
+
+    expect(result.current.get('a')?.status).toBe('ended');
+    expect(onEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('routes async onEnd rejections to diagnostics once', async () => {
+    const logger = vi.fn();
+    renderHook(() =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        diagnostics: { logger },
+        items: [
+          {
+            id: 'a',
+            autoStart: true,
+            endWhen: snapshot => snapshot.elapsedMilliseconds >= 100,
+            onEnd: () => Promise.reject(new Error('boom')),
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(logger).toHaveBeenCalledWith(expect.objectContaining({ type: 'callback:error', timerId: 'a' }));
+  });
+
   it('supports add, update, remove, clear, and duplicate validation', () => {
     const { result } = renderHook(() => useTimerGroup({ updateIntervalMs: 100 }));
 

@@ -157,9 +157,7 @@ function createTimerStore(initialOptions: UseTimerOptions): TimerStore {
     },
     subscribe: listener => {
       listeners.add(listener);
-      return () => {
-        listeners.delete(listener);
-      };
+      return () => listeners.delete(listener);
     },
   };
 }

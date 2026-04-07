@@ -1,16 +1,16 @@
 ---
-title: Debug logs
+title: Diagnostics
 description: Opt into semantic lifecycle and schedule events.
 ---
 
 import RecipePlayground from '@site/src/components/RecipePlayground';
 import { DebugLogsSample } from '../../../samples/recipes';
 
-# Debug logs
+# Diagnostics
 
-Debug logs are opt-in and semantic. They do not expose timeout handles.
+Diagnostics are opt-in and semantic. They do not expose timeout handles.
 
-<RecipePlayground title="Debug logs">
+<RecipePlayground title="Diagnostics">
   <DebugLogsSample />
 </RecipePlayground>
 
@@ -19,6 +19,6 @@ import { consoleTimerDiagnostics } from '@crup/react-timer-hook/diagnostics';
 import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
 
 useScheduledTimer({
-  debug: consoleTimerDiagnostics({ label: 'auction-card' }),
+  diagnostics: consoleTimerDiagnostics({ label: 'auction-card' }),
 });
 ```

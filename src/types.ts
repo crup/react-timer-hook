@@ -27,7 +27,7 @@ export type TimerSnapshot = {
   isCancelled: boolean;
 };
 
-export type TimerControls = {
+export type TimerLifecycleControls = {
   start(): void;
   pause(): void;
   resume(): void;
@@ -35,6 +35,8 @@ export type TimerControls = {
   restart(): void;
   cancel(reason?: string): void;
 };
+
+export type TimerControls = TimerLifecycleControls;
 
 export type TimerEndPredicate = (snapshot: TimerSnapshot) => boolean;
 
@@ -55,19 +57,18 @@ export type TimerSchedule = {
   callback: (snapshot: TimerSnapshot, controls: TimerControls, context: TimerScheduleContext) => void | Promise<void>;
 };
 
-export type TimerDebug =
-  | boolean
-  | TimerDebugLogger
+export type TimerDiagnostics =
+  | TimerDiagnosticsLogger
   | {
       enabled?: boolean;
-      logger?: TimerDebugLogger;
+      logger: TimerDiagnosticsLogger;
       includeTicks?: boolean;
       label?: string;
     };
 
-export type TimerDebugLogger = (event: TimerDebugEvent) => void;
+export type TimerDiagnosticsLogger = (event: TimerDiagnosticsEvent) => void;
 
-export type TimerDebugEvent = {
+export type TimerDiagnosticsEvent = {
   type:
     | 'timer:start'
     | 'timer:pause'
@@ -111,17 +112,10 @@ export type UseTimerOptions = {
 
 export type UseScheduledTimerOptions = UseTimerOptions & {
   schedules?: TimerSchedule[];
-  debug?: TimerDebug;
+  diagnostics?: TimerDiagnostics;
 };
 
-export type TimerGroupItemControls = {
-  start(): void;
-  pause(): void;
-  resume(): void;
-  reset(options?: { autoStart?: boolean }): void;
-  restart(): void;
-  cancel(reason?: string): void;
-};
+export type TimerGroupItemControls = TimerLifecycleControls;
 
 export type TimerGroupItem = {
   id: string;
@@ -134,7 +128,7 @@ export type TimerGroupItem = {
 export type UseTimerGroupOptions = {
   updateIntervalMs?: number;
   items?: TimerGroupItem[];
-  debug?: TimerDebug;
+  diagnostics?: TimerDiagnostics;
 };
 
 export type TimerGroupResult = {

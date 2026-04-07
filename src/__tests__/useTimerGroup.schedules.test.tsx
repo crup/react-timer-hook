@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useTimerGroup } from '../useTimerGroup';
 
-describe('useTimerGroup schedules and debug', () => {
+describe('useTimerGroup schedules and diagnostics', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(0);
@@ -12,13 +12,13 @@ describe('useTimerGroup schedules and debug', () => {
     vi.useRealTimers();
   });
 
-  it('runs item schedules independently and includes timer id in debug logs', async () => {
+  it('runs item schedules independently and includes timer id in diagnostics', async () => {
     const callback = vi.fn();
     const logger = vi.fn();
     renderHook(() =>
       useTimerGroup({
         updateIntervalMs: 100,
-        debug: { logger },
+        diagnostics: { logger },
         items: [
           {
             id: 'a',
@@ -36,13 +36,13 @@ describe('useTimerGroup schedules and debug', () => {
     expect(logger).toHaveBeenCalledWith(expect.objectContaining({ type: 'schedule:start', timerId: 'a', scheduleId: 'poll' }));
   });
 
-  it('passes schedule timing context to item callbacks and debug logs', async () => {
+  it('passes schedule timing context to item callbacks and diagnostics', async () => {
     const callback = vi.fn();
     const logger = vi.fn();
     renderHook(() =>
       useTimerGroup({
         updateIntervalMs: 100,
-        debug: { logger },
+        diagnostics: { logger },
         items: [
           {
             id: 'a',
@@ -79,6 +79,26 @@ describe('useTimerGroup schedules and debug', () => {
         overdueCount: 0,
         effectiveEveryMs: 100,
       }),
+    );
+  });
+
+  it('starts newly added schedules from the update time', async () => {
+    const callback = vi.fn();
+    const { result } = renderHook(() => useTimerGroup({ updateIntervalMs: 1000 }));
+
+    act(() => result.current.add({ id: 'a', autoStart: true }));
+    act(() => vi.advanceTimersByTime(50));
+    act(() => result.current.update('a', { schedules: [{ id: 'poll', everyMs: 100, callback }] }));
+    act(() => vi.advanceTimersByTime(99));
+    await act(async () => {});
+    expect(callback).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(1));
+    await act(async () => {});
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ now: 150 }),
+      expect.anything(),
+      expect.objectContaining({ scheduledAt: 150, firedAt: 150 }),
     );
   });
 

@@ -9,12 +9,12 @@ description: Optional schedule-enabled timer API for polling and timing context.
 import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
 ```
 
-`useScheduledTimer()` includes the lifecycle API from `useTimer()` plus schedule callbacks and opt-in debug events. It lives in a subpath so the root import stays small for clocks, stopwatches, and countdowns that do not need polling.
+`useScheduledTimer()` includes the lifecycle API from `useTimer()` plus schedule callbacks and optional diagnostics. It lives in a subpath so the root import stays small for clocks, stopwatches, and countdowns that do not need polling.
 
 ```ts
 type UseScheduledTimerOptions = UseTimerOptions & {
   schedules?: TimerSchedule[];
-  debug?: TimerDebug;
+  diagnostics?: TimerDiagnostics;
 };
 ```
 

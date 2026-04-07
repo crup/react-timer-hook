@@ -52,17 +52,16 @@ type TimerSchedule = {
 
 `scheduledAt` is the intended fire time. `firedAt` is when the browser actually ran the callback. `overdueCount` reports how many schedule windows were missed before this callback because the browser, tab, or previous work delayed execution.
 
-## Debug
+## Diagnostics
 
-Debug is opt-in. The package does not emit logs by default.
+Diagnostics are opt-in. The package does not emit logs by default.
 
 ```ts
-type TimerDebug =
-  | boolean
-  | TimerDebugLogger
+type TimerDiagnostics =
+  | TimerDiagnosticsLogger
   | {
       enabled?: boolean;
-      logger?: TimerDebugLogger;
+      logger: TimerDiagnosticsLogger;
       includeTicks?: boolean;
       label?: string;
     };

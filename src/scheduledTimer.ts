@@ -1,370 +1,235 @@
-import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
-import { baseDebugEvent, emitDebug } from './debug';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { readClock, validatePositiveFinite } from './clocks';
+import { baseDebugEvent, emitDiagnostics } from './debug';
+import {
+  evaluateSchedules,
+  getNextScheduleDelay,
+  syncScheduleStates,
+  type ScheduleEvent,
+  type ScheduleState,
+} from './scheduleCore';
 import {
   cancelTimerState,
-  createTimerState,
-  endTimerState,
   pauseTimerState,
   resetTimerState,
   restartTimerState,
   resumeTimerState,
   startTimerState,
   tickTimerState,
-  toSnapshot,
-  type InternalTimerState,
 } from './state';
-import type { TimerControls, TimerSchedule, TimerScheduleContext, TimerSnapshot, UseScheduledTimerOptions } from './types';
+import {
+  createTimerItem,
+  endTimerItemIfNeeded,
+  getTimerItemSnapshot,
+  resetTimerItemEndGuard,
+  type TimerItem,
+} from './timerItem';
+import type { TimerControls, TimerSnapshot, UseScheduledTimerOptions } from './types';
 
-type ScheduleState = {
-  lastRunAt: number | null;
-  pending: boolean;
-  leadingGeneration: number | null;
+type ScheduledTimerStore = {
+  controls: TimerControls;
+  destroy(): void;
+  getSnapshot(): TimerSnapshot;
+  setOptions(options: UseScheduledTimerOptions): void;
+  subscribe(listener: () => void): () => void;
 };
 
 export function useScheduledTimer(options: UseScheduledTimerOptions = {}): TimerSnapshot & TimerControls {
-  const updateIntervalMs = options.updateIntervalMs ?? 1000;
-  validatePositiveFinite(updateIntervalMs, 'updateIntervalMs');
-  validateSchedules(options.schedules);
-
-  const optionsRef = useRef(options);
-  optionsRef.current = options;
-
-  const stateRef = useRef<InternalTimerState | null>(null);
-  if (stateRef.current === null) {
-    stateRef.current = createTimerState(readClock());
+  const storeRef = useRef<ScheduledTimerStore | null>(null);
+  if (storeRef.current === null) {
+    storeRef.current = createScheduledTimerStore(options);
   }
 
-  const mountedRef = useRef(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const schedulesRef = useRef<Map<string, ScheduleState>>(new Map());
-  const endCalledGenerationRef = useRef<number | null>(null);
-  const [, rerender] = useReducer((value: number) => value + 1, 0);
+  storeRef.current.setOptions(options);
 
-  const clearScheduledTick = useCallback(() => {
-    if (timeoutRef.current !== null) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+  useEffect(() => {
+    const store = storeRef.current!;
+    if (options.autoStart) store.controls.start();
+    return () => store.destroy();
+  }, []);
+
+  const snapshot = useSyncExternalStore(storeRef.current.subscribe, storeRef.current.getSnapshot, storeRef.current.getSnapshot);
+  return { ...snapshot, ...storeRef.current.controls };
+}
+
+function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): ScheduledTimerStore {
+  let options = initialOptions;
+  validateOptions(options);
+
+  const listeners = new Set<() => void>();
+  const item: TimerItem<TimerControls, UseScheduledTimerOptions> = createTimerItem(options, readClock());
+  const schedules = new Map<string, ScheduleState>();
+  let snapshot = getTimerItemSnapshot(item, readClock());
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+
+  const notify = (clock = readClock()) => {
+    snapshot = getTimerItemSnapshot(item, clock);
+    listeners.forEach(listener => listener());
+  };
+
+  const clear = () => {
+    if (timeout !== null) {
+      clearTimeout(timeout);
+      timeout = null;
     }
-  }, []);
+  };
 
-  const getSnapshot = useCallback((clock = readClock()) => {
-    return toSnapshot(stateRef.current!, clock);
-  }, []);
-
-  const emit = useCallback(
-    (type: Parameters<typeof emitDebug>[1]['type'], snapshot: TimerSnapshot, extra: Partial<Parameters<typeof emitDebug>[1]> = {}) => {
-      emitDebug(optionsRef.current.debug, {
-        type,
-        scope: 'timer',
-        ...baseDebugEvent(snapshot, stateRef.current!.generation),
-        ...extra,
-      });
-    },
-    [],
-  );
-
-  const controlsRef = useRef<TimerControls | null>(null);
-
-  const callOnEnd = useCallback(
-    (snapshot: TimerSnapshot) => {
-      const generation = stateRef.current!.generation;
-      if (endCalledGenerationRef.current === generation) return;
-      endCalledGenerationRef.current = generation;
-
-      try {
-        void optionsRef.current.onEnd?.(snapshot, controlsRef.current!);
-      } catch (error) {
-        emitDebug(optionsRef.current.debug, {
-          type: 'callback:error',
-          scope: 'timer',
-          ...baseDebugEvent(snapshot, generation),
-          error,
-        });
-      }
-    },
-    [],
-  );
-
-  const runSchedule = useCallback(
-    (
-      schedule: TimerSchedule,
-      key: string,
-      scheduleState: ScheduleState,
-      snapshot: TimerSnapshot,
-      generation: number,
-      context: TimerScheduleContext,
-    ) => {
-      if (scheduleState.pending && (schedule.overlap ?? 'skip') === 'skip') {
-        scheduleState.lastRunAt = context.scheduledAt;
-        emitDebug(optionsRef.current.debug, {
-          type: 'schedule:skip',
-          scope: 'timer',
-          reason: 'overlap',
-          ...context,
-          ...baseDebugEvent(snapshot, generation),
-        });
-        return;
-      }
-
-      scheduleState.lastRunAt = context.scheduledAt;
-      scheduleState.pending = true;
-      emitDebug(optionsRef.current.debug, {
-        type: 'schedule:start',
-        scope: 'timer',
-        ...context,
-        ...baseDebugEvent(snapshot, generation),
-      });
-
-      Promise.resolve()
-        .then(() => schedule.callback(snapshot, controlsRef.current!, context))
-        .then(
-          () => {
-            emitDebug(optionsRef.current.debug, {
-              type: 'schedule:end',
-              scope: 'timer',
-              ...context,
-              ...baseDebugEvent(snapshot, generation),
-            });
-          },
-          error => {
-            emitDebug(optionsRef.current.debug, {
-              type: 'schedule:error',
-              scope: 'timer',
-              error,
-              ...context,
-              ...baseDebugEvent(snapshot, generation),
-            });
-          },
-        )
-        .finally(() => {
-          if (stateRef.current?.generation === generation) {
-            scheduleState.pending = false;
-          }
-        });
-    },
-    [],
-  );
-
-  const evaluateSchedules = useCallback(
-    (snapshot: TimerSnapshot, generation: number, activation = false) => {
-      const schedules = optionsRef.current.schedules ?? [];
-      const liveKeys = new Set<string>();
-
-      schedules.forEach((schedule, index) => {
-        const key = schedule.id ?? String(index);
-        liveKeys.add(key);
-        let scheduleState = schedulesRef.current.get(key);
-        if (!scheduleState) {
-          scheduleState = { lastRunAt: null, pending: false, leadingGeneration: null };
-          schedulesRef.current.set(key, scheduleState);
-        }
-
-        if (activation && schedule.leading && scheduleState.leadingGeneration !== generation) {
-          scheduleState.leadingGeneration = generation;
-          runSchedule(schedule, key, scheduleState, snapshot, generation, createScheduleContext(schedule, key, snapshot.now, snapshot.now, 0));
-          return;
-        }
-
-        if (scheduleState.lastRunAt === null) {
-          scheduleState.lastRunAt = stateRef.current!.startedAt ?? snapshot.now;
-        }
-
-        const dueCount = Math.floor((snapshot.now - scheduleState.lastRunAt) / schedule.everyMs);
-        if (dueCount >= 1) {
-          const scheduledAt = scheduleState.lastRunAt + dueCount * schedule.everyMs;
-          runSchedule(schedule, key, scheduleState, snapshot, generation, createScheduleContext(schedule, key, scheduledAt, snapshot.now, dueCount - 1));
-        }
-      });
-
-      for (const key of schedulesRef.current.keys()) {
-        if (!liveKeys.has(key)) schedulesRef.current.delete(key);
-      }
-    },
-    [runSchedule],
-  );
-
-  const processRunningState = useCallback(
-    (clock = readClock(), activation = false) => {
-      const state = stateRef.current!;
-      if (state.status !== 'running') return;
-
-      const snapshot = toSnapshot(state, clock);
-      const generation = state.generation;
-
-      if (optionsRef.current.endWhen?.(snapshot)) {
-        if (endTimerState(state, clock)) {
-          const endedSnapshot = toSnapshot(state, clock);
-          emit('timer:end', endedSnapshot);
-          clearScheduledTick();
-          callOnEnd(endedSnapshot);
-          rerender();
-        }
-        return;
-      }
-
-      evaluateSchedules(snapshot, generation, activation);
-    },
-    [callOnEnd, clearScheduledTick, emit, evaluateSchedules],
-  );
-
-  const getNextDelay = useCallback((clock = readClock()) => {
-    const updateIntervalMs = optionsRef.current.updateIntervalMs ?? 1000;
-    let nextDelay = updateIntervalMs;
-
-    const state = stateRef.current!;
-    if (state.status !== 'running') return updateIntervalMs;
-
-    const schedules = optionsRef.current.schedules ?? [];
-    schedules.forEach((schedule, index) => {
-      const key = schedule.id ?? String(index);
-      const scheduleState = schedulesRef.current.get(key);
-      const lastRunAt = scheduleState?.lastRunAt ?? clock.wallNow;
-      nextDelay = Math.min(nextDelay, Math.max(1, lastRunAt + schedule.everyMs - clock.wallNow));
+  const emit = (type: Parameters<typeof emitDiagnostics>[1]['type'], eventSnapshot: TimerSnapshot, extra: Partial<Parameters<typeof emitDiagnostics>[1]> = {}) => {
+    emitDiagnostics(options.diagnostics, {
+      type,
+      scope: 'timer',
+      ...baseDebugEvent(eventSnapshot, item.state.generation),
+      ...extra,
     });
+  };
 
-    return nextDelay;
-  }, []);
+  const onEndError = (error: unknown, eventSnapshot: TimerSnapshot, generation: number) => {
+    emitDiagnostics(options.diagnostics, {
+      type: 'callback:error',
+      scope: 'timer',
+      error,
+      ...baseDebugEvent(eventSnapshot, generation),
+    });
+  };
 
-  const start = useCallback(() => {
-    const clock = readClock();
-    if (!startTimerState(stateRef.current!, clock)) return;
-    const snapshot = toSnapshot(stateRef.current!, clock);
-    emit('timer:start', snapshot);
-    processRunningState(clock, true);
-    rerender();
-  }, [emit, processRunningState]);
+  const emitSchedule = (eventSnapshot: TimerSnapshot, generation: number) => (event: ScheduleEvent) => {
+    emitDiagnostics(options.diagnostics, {
+      type: event.type,
+      scope: 'timer',
+      ...event.context,
+      ...('reason' in event ? { reason: event.reason } : {}),
+      ...('error' in event ? { error: event.error } : {}),
+      ...baseDebugEvent(eventSnapshot, generation),
+    });
+  };
 
-  const pause = useCallback(() => {
-    const clock = readClock();
-    if (!pauseTimerState(stateRef.current!, clock)) return;
-    clearScheduledTick();
-    const snapshot = toSnapshot(stateRef.current!, clock);
-    emit('timer:pause', snapshot);
-    rerender();
-  }, [clearScheduledTick, emit]);
+  const process = (clock = readClock(), activation = false) => {
+    if (item.state.status !== 'running') return false;
 
-  const resume = useCallback(() => {
-    const clock = readClock();
-    if (!resumeTimerState(stateRef.current!, clock)) return;
-    const snapshot = toSnapshot(stateRef.current!, clock);
-    emit('timer:resume', snapshot);
-    processRunningState(clock, true);
-    rerender();
-  }, [emit, processRunningState]);
-
-  const reset = useCallback(
-    (resetOptions: { autoStart?: boolean } = {}) => {
-      const clock = readClock();
-      clearScheduledTick();
-      resetTimerState(stateRef.current!, clock, resetOptions);
-      schedulesRef.current.clear();
-      endCalledGenerationRef.current = null;
-      const snapshot = toSnapshot(stateRef.current!, clock);
-      emit('timer:reset', snapshot);
-      if (resetOptions.autoStart) processRunningState(clock, true);
-      rerender();
-    },
-    [clearScheduledTick, emit, processRunningState],
-  );
-
-  const restart = useCallback(() => {
-    const clock = readClock();
-    clearScheduledTick();
-    restartTimerState(stateRef.current!, clock);
-    schedulesRef.current.clear();
-    endCalledGenerationRef.current = null;
-    const snapshot = toSnapshot(stateRef.current!, clock);
-    emit('timer:restart', snapshot);
-    processRunningState(clock, true);
-    rerender();
-  }, [clearScheduledTick, emit, processRunningState]);
-
-  const cancel = useCallback(
-    (reason?: string) => {
-      const clock = readClock();
-      if (!cancelTimerState(stateRef.current!, clock, reason)) return;
-      clearScheduledTick();
-      const snapshot = toSnapshot(stateRef.current!, clock);
-      emit('timer:cancel', snapshot, { reason });
-      rerender();
-    },
-    [clearScheduledTick, emit],
-  );
-
-  controlsRef.current = useMemo(
-    () => ({ start, pause, resume, reset, restart, cancel }),
-    [cancel, pause, reset, restart, resume, start],
-  );
-
-  useEffect(() => {
-    mountedRef.current = true;
-    if (optionsRef.current.autoStart && stateRef.current!.status === 'idle') {
-      controlsRef.current!.start();
+    const endedSnapshot = endTimerItemIfNeeded(item, clock, controls, onEndError);
+    if (endedSnapshot) {
+      clear();
+      emit('timer:end', endedSnapshot);
+      notify(clock);
+      return true;
     }
 
-    return () => {
-      mountedRef.current = false;
-      clearScheduledTick();
-    };
-  }, [clearScheduledTick]);
+    const currentSnapshot = getTimerItemSnapshot(item, clock);
+    evaluateSchedules({
+      schedules: options.schedules,
+      states: schedules,
+      snapshot: currentSnapshot,
+      generation: item.state.generation,
+      controls,
+      activation,
+      isLive: generation => item.state.generation === generation,
+      onEvent: emitSchedule(currentSnapshot, item.state.generation),
+    });
+    return false;
+  };
 
-  const snapshot = getSnapshot();
-  const generation = stateRef.current.generation;
-  const status = snapshot.status;
+  const schedule = () => {
+    clear();
+    if (item.state.status !== 'running') return;
 
-  useEffect(() => {
-    if (!mountedRef.current || status !== 'running') {
-      clearScheduledTick();
+    const delay = getNextScheduleDelay(options.schedules, schedules, readClock().wallNow, options.updateIntervalMs ?? 1000);
+    emit('scheduler:start', getTimerItemSnapshot(item, readClock()));
+    timeout = setTimeout(() => {
+      if (item.state.status !== 'running') return;
+
+      const clock = readClock();
+      tickTimerState(item.state, clock);
+      const tickSnapshot = getTimerItemSnapshot(item, clock);
+      emit('timer:tick', tickSnapshot);
+
+      if (!process(clock)) {
+        notify(clock);
+        schedule();
+      }
+    }, delay);
+  };
+
+  const start = () => {
+    const clock = readClock();
+    if (!startTimerState(item.state, clock)) {
+      if (item.state.status === 'running') schedule();
       return;
     }
+    emit('timer:start', getTimerItemSnapshot(item, clock));
+    process(clock, true);
+    notify(clock);
+    schedule();
+  };
 
-    clearScheduledTick();
-    emit('scheduler:start', getSnapshot());
-    timeoutRef.current = setTimeout(() => {
-      if (!mountedRef.current) return;
-      if (stateRef.current!.generation !== generation) return;
-      if (stateRef.current!.status !== 'running') return;
+  const pause = () => {
+    const clock = readClock();
+    if (!pauseTimerState(item.state, clock)) return;
+    clear();
+    emit('timer:pause', getTimerItemSnapshot(item, clock));
+    notify(clock);
+  };
 
-      const clock = readClock();
-      tickTimerState(stateRef.current!, clock);
-      const tickSnapshot = toSnapshot(stateRef.current!, clock);
-      emit('timer:tick', tickSnapshot);
-      processRunningState(clock);
-      rerender();
-    }, getNextDelay());
+  const resume = () => {
+    const clock = readClock();
+    if (!resumeTimerState(item.state, clock)) return;
+    emit('timer:resume', getTimerItemSnapshot(item, clock));
+    process(clock, true);
+    notify(clock);
+    schedule();
+  };
 
-    return () => {
-      if (timeoutRef.current !== null) {
-        emit('scheduler:stop', getSnapshot());
-      }
-      clearScheduledTick();
-    };
-  }, [clearScheduledTick, emit, generation, getNextDelay, getSnapshot, processRunningState, snapshot.tick, status]);
+  const reset = (resetOptions: { autoStart?: boolean } = {}) => {
+    const clock = readClock();
+    clear();
+    resetTimerState(item.state, clock, resetOptions);
+    schedules.clear();
+    resetTimerItemEndGuard(item);
+    emit('timer:reset', getTimerItemSnapshot(item, clock));
+    process(clock, resetOptions.autoStart);
+    notify(clock);
+    schedule();
+  };
+
+  const restart = () => {
+    const clock = readClock();
+    clear();
+    restartTimerState(item.state, clock);
+    schedules.clear();
+    resetTimerItemEndGuard(item);
+    emit('timer:restart', getTimerItemSnapshot(item, clock));
+    process(clock, true);
+    notify(clock);
+    schedule();
+  };
+
+  const cancel = (reason?: string) => {
+    const clock = readClock();
+    if (!cancelTimerState(item.state, clock, reason)) return;
+    clear();
+    emit('timer:cancel', getTimerItemSnapshot(item, clock), { reason });
+    notify(clock);
+  };
+
+  const controls: TimerControls = { start, pause, resume, reset, restart, cancel };
 
   return {
-    ...snapshot,
-    ...controlsRef.current,
+    controls,
+    destroy: clear,
+    getSnapshot: () => snapshot,
+    setOptions: nextOptions => {
+      validateOptions(nextOptions);
+      options = nextOptions;
+      item.definition = nextOptions;
+      syncScheduleStates(options.schedules, schedules, readClock().wallNow, item.state.status === 'running');
+    },
+    subscribe: listener => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
   };
 }
 
-function validateSchedules(schedules: TimerSchedule[] | undefined): void {
-  schedules?.forEach(schedule => validatePositiveFinite(schedule.everyMs, 'schedule.everyMs'));
-}
-
-function createScheduleContext(
-  schedule: TimerSchedule,
-  key: string,
-  scheduledAt: number,
-  firedAt: number,
-  overdueCount: number,
-): TimerScheduleContext {
-  return {
-    scheduleId: schedule.id ?? key,
-    scheduledAt,
-    firedAt,
-    nextRunAt: scheduledAt + schedule.everyMs,
-    overdueCount,
-    effectiveEveryMs: schedule.everyMs,
-  };
+function validateOptions(options: UseScheduledTimerOptions): void {
+  validatePositiveFinite(options.updateIntervalMs ?? 1000, 'updateIntervalMs');
+  options.schedules?.forEach(schedule => validatePositiveFinite(schedule.everyMs, 'schedule.everyMs'));
 }

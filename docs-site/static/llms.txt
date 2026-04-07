@@ -12,7 +12,7 @@ Public exports:
 - @crup/react-timer-hook/group useTimerGroup(options): many keyed independent lifecycles with one shared scheduler.
 - @crup/react-timer-hook/schedules useScheduledTimer(options): schedule-enabled timer with context.
 - @crup/react-timer-hook/duration durationParts(milliseconds): duration display helper.
-- @crup/react-timer-hook/diagnostics consoleTimerDiagnostics(options): console debug helper.
+- @crup/react-timer-hook/diagnostics consoleTimerDiagnostics(options): console diagnostics helper.
 
 Core rules:
 - Use timer.now for wall-clock deadlines and clocks.
@@ -21,5 +21,5 @@ Core rules:
 - Use cancel(reason) for terminal early stops.
 - Schedules are opt-in through @crup/react-timer-hook/schedules and default to overlap: 'skip'.
 - Schedule callbacks receive context with scheduledAt, firedAt, nextRunAt, overdueCount, and effectiveEveryMs.
-- Debug logs are opt-in only.
-- Formatting, locale, timezone, caching, retries, and business rules are userland.
+- Diagnostics are opt-in only.
+- UI display and data fetching stay in userland.

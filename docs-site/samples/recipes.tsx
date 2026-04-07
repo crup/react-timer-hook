@@ -254,7 +254,7 @@ export function DebugLogsSample() {
   const [logs, setLogs] = useState<string[]>([]);
   const timer = useScheduledTimer({
     updateIntervalMs: 1000,
-    debug: {
+    diagnostics: {
       label: 'docs-demo',
       includeTicks: false,
       logger: event => setLogs(previous => [`${event.type} (${event.status})`, ...previous].slice(0, 5)),
@@ -262,7 +262,7 @@ export function DebugLogsSample() {
   });
 
   return (
-    <DemoShell eyebrow="Debug events" title={logs[0] ?? 'No events yet'} status={timer.status}>
+    <DemoShell eyebrow="Diagnostics" title={logs[0] ?? 'No events yet'} status={timer.status}>
       <EventStream events={logs.length ? logs : ['start, pause, resume, cancel, or restart to emit events']} />
       <TimerControlsPanel timer={timer} allowCancel />
     </DemoShell>

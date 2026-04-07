@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useScheduledTimer as useTimer } from '../scheduledTimer';
 
-describe('useTimer debug', () => {
+describe('useTimer diagnostics', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(0);
@@ -27,7 +27,7 @@ describe('useTimer debug', () => {
     const { result } = renderHook(() =>
       useTimer({
         updateIntervalMs: 100,
-        debug: { logger, includeTicks: true, label: 'test' },
+        diagnostics: { logger, includeTicks: true, label: 'test' },
       }),
     );
 
@@ -44,7 +44,7 @@ describe('useTimer debug', () => {
     const { result } = renderHook(() =>
       useTimer({
         updateIntervalMs: 100,
-        debug: { logger },
+        diagnostics: { logger },
       }),
     );
 

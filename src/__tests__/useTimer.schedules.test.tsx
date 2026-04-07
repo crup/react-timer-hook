@@ -191,13 +191,13 @@ describe('useTimer schedules', () => {
     );
   });
 
-  it('emits schedule timing context in debug logs', async () => {
+  it('emits schedule timing context in diagnostics', async () => {
     const logger = vi.fn();
     renderHook(() =>
       useTimer({
         autoStart: true,
         updateIntervalMs: 100,
-        debug: { logger },
+        diagnostics: { logger },
         schedules: [{ id: 'poll', everyMs: 100, callback: vi.fn() }],
       }),
     );
@@ -216,5 +216,23 @@ describe('useTimer schedules', () => {
         effectiveEveryMs: 100,
       }),
     );
+  });
+
+  it('routes async onEnd rejections to diagnostics', async () => {
+    const logger = vi.fn();
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        diagnostics: { logger },
+        endWhen: snapshot => snapshot.elapsedMilliseconds >= 100,
+        onEnd: () => Promise.reject(new Error('boom')),
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(logger).toHaveBeenCalledWith(expect.objectContaining({ type: 'callback:error' }));
   });
 });

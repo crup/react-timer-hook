@@ -78,6 +78,6 @@ Local docs MCP server:
 }
 ```
 
-## Non-goals
+## Boundaries
 
-No formatting, no timezone handling, no mode enums, no data-fetching cache, and no raw timeout handle exposure.
+Use the hook for timer lifecycle, elapsed time, schedules, and controls. Keep UI display and data fetching in your app.

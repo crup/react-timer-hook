@@ -1,11 +1,11 @@
 ---
-title: Debug logs
+title: Diagnostics
 description: Opt-in semantic diagnostics for timer lifecycles and schedules.
 ---
 
-# Debug logs
+# Diagnostics
 
-Debug logs are off by default.
+Diagnostics are off by default.
 
 ```tsx
 import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
@@ -13,10 +13,10 @@ import { consoleTimerDiagnostics } from '@crup/react-timer-hook/diagnostics';
 
 useScheduledTimer({
   autoStart: true,
-  debug: consoleTimerDiagnostics({ label: 'auction-card' }),
+  diagnostics: consoleTimerDiagnostics({ label: 'auction-card' }),
 });
 ```
 
-Debug events are semantic: `timer:start`, `timer:pause`, `timer:resume`, `timer:reset`, `timer:restart`, `timer:cancel`, `timer:end`, `scheduler:start`, `scheduler:stop`, `schedule:start`, `schedule:skip`, `schedule:end`, `schedule:error`, and `callback:error`.
+Events are semantic: `timer:start`, `timer:pause`, `timer:resume`, `timer:reset`, `timer:restart`, `timer:cancel`, `timer:end`, `scheduler:start`, `scheduler:stop`, `schedule:start`, `schedule:skip`, `schedule:end`, `schedule:error`, and `callback:error`.
 
 Raw timeout handles are not exposed.

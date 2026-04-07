@@ -1,3 +1,10 @@
 export { useScheduledTimer } from './scheduledTimer';
 
-export type { TimerDebug, TimerDebugEvent, TimerDebugLogger, TimerSchedule, TimerScheduleContext, UseScheduledTimerOptions } from './types';
+export type {
+  TimerDiagnostics,
+  TimerDiagnosticsEvent,
+  TimerDiagnosticsLogger,
+  TimerSchedule,
+  TimerScheduleContext,
+  UseScheduledTimerOptions,
+} from './types';

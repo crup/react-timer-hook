@@ -1,10 +1,10 @@
-import type { TimerDebug, TimerDebugEvent } from './types';
+import type { TimerDiagnostics, TimerDiagnosticsEvent } from './types';
 
-export function consoleTimerDiagnostics(options: { includeTicks?: boolean; label?: string } = {}): TimerDebug {
+export function consoleTimerDiagnostics(options: { includeTicks?: boolean; label?: string } = {}): TimerDiagnostics {
   return {
     ...options,
-    logger: (event: TimerDebugEvent) => console.debug('[timer]', event),
+    logger: (event: TimerDiagnosticsEvent) => console.debug('[timer]', event),
   };
 }
 
-export type { TimerDebug, TimerDebugEvent, TimerDebugLogger } from './types';
+export type { TimerDiagnostics, TimerDiagnosticsEvent, TimerDiagnosticsLogger } from './types';
