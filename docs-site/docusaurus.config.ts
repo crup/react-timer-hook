@@ -1,6 +1,10 @@
 import type { Config } from '@docusaurus/types';
 import type { Options as PresetOptions, ThemeConfig } from '@docusaurus/preset-classic';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { themes as prismThemes } from 'prism-react-renderer';
+
+const docsSiteDir = path.dirname(fileURLToPath(import.meta.url));
 
 const config: Config = {
   title: '@crup/react-timer-hook',
@@ -32,6 +36,26 @@ const config: Config = {
         },
       } satisfies PresetOptions,
     ],
+  ],
+  plugins: [
+    function generatedFilesWebpackParser() {
+      return {
+        name: 'generated-files-webpack-parser',
+        configureWebpack() {
+          return {
+            module: {
+              rules: [
+                {
+                  include: path.join(docsSiteDir, '.docusaurus'),
+                  test: /\.js$/,
+                  type: 'javascript/auto',
+                },
+              ],
+            },
+          };
+        },
+      };
+    },
   ],
   themeConfig: {
     image: 'img/social-card.svg',
