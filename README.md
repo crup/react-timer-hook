@@ -1,6 +1,6 @@
 # @crup/react-timer-hook
 
-> Tiny React timer primitives for countdowns, stopwatches, clocks, polling schedules, and many independent timer lifecycles.
+> ~1.2 kB timer core for React, with opt-in batteries for schedules, diagnostics, duration math, and many independent timers.
 
 [![npm alpha](https://img.shields.io/npm/v/%40crup%2Freact-timer-hook/alpha?label=npm%20alpha&color=00b894)](https://www.npmjs.com/package/@crup/react-timer-hook?activeTab=versions)
 [![npm downloads](https://img.shields.io/npm/dm/%40crup%2Freact-timer-hook?color=0f766e)](https://www.npmjs.com/package/@crup/react-timer-hook)
@@ -17,9 +17,10 @@
 
 Timer hooks look simple until real apps need pause/resume semantics, Strict Mode cleanup, async callbacks, polling that does not overlap, and lists with dozens of independent timers.
 
-`@crup/react-timer-hook` keeps the root import small and lets your app opt into heavier features only when needed:
+`@crup/react-timer-hook` starts with a tiny core and lets your app compose the heavier pieces only when it needs them:
 
 - ⏱️ `useTimer()` from the root package for one lifecycle: stopwatch, countdown, clock, or custom flow.
+- 🔋 Batteries are optional: schedules, timer groups, duration helpers, and diagnostics live in subpath imports.
 - 🧭 `useTimerGroup()` from `/group` for many keyed lifecycles with one shared scheduler.
 - 📡 `useScheduledTimer()` from `/schedules` for polling, overdue timing context, and opt-in diagnostics.
 - 🧩 `durationParts()` from `/duration` for display math without locale or timezone opinions.
@@ -41,9 +42,6 @@ import { useTimer } from '@crup/react-timer-hook';
 import { durationParts } from '@crup/react-timer-hook/duration';
 import { useTimerGroup } from '@crup/react-timer-hook/group';
 import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
-
-// Or choose convenience over minimum entry size:
-import { durationParts, useScheduledTimer, useTimer, useTimerGroup } from '@crup/react-timer-hook/full';
 ```
 
 ## Live recipes
@@ -147,16 +145,15 @@ const timers = useTimerGroup({
 
 ## Bundle size
 
-Current build:
+The core import stays small. Extra capabilities are opt-in batteries.
 
 | Entry | Raw | Gzip | Brotli |
 | --- | ---: | ---: | ---: |
-| core | 3.91 kB | 1.34 kB | 1.23 kB |
-| full | 15.03 kB | 4.69 kB | 4.18 kB |
-| timer group add-on | 9.05 kB | 3.01 kB | 2.74 kB |
-| schedules add-on | 6.99 kB | 2.35 kB | 2.16 kB |
-| duration helper | 374 B | 262 B | 229 B |
-| diagnostics helper | 156 B | 155 B | 139 B |
+| core | 3.82 kB | 1.31 kB | 1.21 kB |
+| timer group add-on | 8.94 kB | 2.97 kB | 2.70 kB |
+| schedules add-on | 6.88 kB | 2.32 kB | 2.13 kB |
+| duration helper | 318 B | 224 B | 192 B |
+| diagnostics helper | 105 B | 115 B | 99 B |
 
 CI writes a size summary to the GitHub Actions UI and posts bundle-size reports on pull requests.
 

@@ -5,13 +5,11 @@ import { brotliCompressSync, gzipSync } from 'node:zlib';
 const json = process.argv.includes('--json');
 const entries = [
   ['core', 'dist/index.js'],
-  ['full', 'dist/full.js'],
   ['timer group add-on', 'dist/group.js'],
   ['schedules add-on', 'dist/schedules.js'],
   ['duration helper', 'dist/duration.js'],
   ['diagnostics helper', 'dist/diagnostics.js'],
   ['core CJS', 'dist/index.cjs'],
-  ['full CJS', 'dist/full.cjs'],
   ['timer group CJS', 'dist/group.cjs'],
   ['schedules CJS', 'dist/schedules.cjs'],
   ['duration CJS', 'dist/duration.cjs'],

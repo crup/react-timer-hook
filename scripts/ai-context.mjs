@@ -16,7 +16,6 @@ const context = {
     '@crup/react-timer-hook/schedules: useScheduledTimer',
     '@crup/react-timer-hook/duration: durationParts',
     '@crup/react-timer-hook/diagnostics: consoleTimerDiagnostics',
-    '@crup/react-timer-hook/full: convenience runtime exports',
   ],
   principles: [
     'Use now for wall-clock deadlines and clocks.',

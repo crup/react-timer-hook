@@ -13,7 +13,6 @@ Public exports:
 - @crup/react-timer-hook/schedules useScheduledTimer(options): schedule-enabled timer with context.
 - @crup/react-timer-hook/duration durationParts(milliseconds): duration display helper.
 - @crup/react-timer-hook/diagnostics consoleTimerDiagnostics(options): console debug helper.
-- @crup/react-timer-hook/full: convenience import for all public runtime helpers.
 
 Core rules:
 - Use timer.now for wall-clock deadlines and clocks.

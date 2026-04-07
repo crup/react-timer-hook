@@ -7,7 +7,6 @@ export default defineConfig({
     duration: 'src/duration.ts',
     schedules: 'src/schedules.ts',
     diagnostics: 'src/diagnostics.ts',
-    full: 'src/full.ts',
   },
   format: ['esm', 'cjs'],
   dts: true,
