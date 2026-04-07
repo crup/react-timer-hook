@@ -79,10 +79,9 @@ jobs:
           if [ "$VERSION_BUMP" = "manual" ]; then
             STABLE_VERSION="$STABLE_VERSION_INPUT"
           else
-            STABLE_VERSION="$(
-              CURRENT_LATEST="$CURRENT_LATEST" VERSION_BUMP="$VERSION_BUMP" node - <<'NODE'
-              const currentLatest = process.env.CURRENT_LATEST || '';
-              const bump = process.env.VERSION_BUMP || 'patch';
+            STABLE_VERSION="$(CURRENT_LATEST="$CURRENT_LATEST" VERSION_BUMP="$VERSION_BUMP" node -e '
+              const currentLatest = process.env.CURRENT_LATEST || "";
+              const bump = process.env.VERSION_BUMP || "patch";
               const match = currentLatest.match(/^(\d+)\.(\d+)\.(\d+)(?:-.+)?$/);
               let major = match ? Number(match[1]) : 0;
               let minor = match ? Number(match[2]) : 0;
@@ -94,11 +93,11 @@ jobs:
                 patch = 1;
               } else if (isPrerelease) {
                 // Promote the current prerelease base to stable, for example 0.0.1-next.18 -> 0.0.1.
-              } else if (bump === 'major') {
+              } else if (bump === "major") {
                 major += 1;
                 minor = 0;
                 patch = 0;
-              } else if (bump === 'minor') {
+              } else if (bump === "minor") {
                 minor += 1;
                 patch = 0;
               } else {
@@ -106,8 +105,7 @@ jobs:
               }
 
               process.stdout.write(`${major}.${minor}.${patch}`);
-NODE
-            )"
+            ')"
           fi
 
           if ! printf '%s' "$STABLE_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
