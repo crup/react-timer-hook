@@ -8,7 +8,7 @@ const docsSiteDir = path.dirname(fileURLToPath(import.meta.url));
 
 const config: Config = {
   title: '@crup/react-timer-hook',
-  tagline: 'React timer primitives for real apps.',
+  tagline: 'Lightweight React hooks for timers, stopwatches, and real-time clocks.',
   favicon: 'img/favicon.svg',
   url: 'https://crup.github.io',
   baseUrl: '/react-timer-hook/',

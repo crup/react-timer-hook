@@ -1,6 +1,6 @@
 # @crup/react-timer-hook
 
-React timer lifecycle hooks for timers, schedules, and many independent timers.
+A lightweight React hooks library for building timers, stopwatches, and real-time clocks with minimal boilerplate.
 
 Docs: https://crup.github.io/react-timer-hook/
 Package: @crup/react-timer-hook

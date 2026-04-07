@@ -1,6 +1,6 @@
 # @crup/react-timer-hook
 
-> ~1.2 kB timer core for React, with opt-in batteries for schedules, diagnostics, duration math, and many independent timers.
+> A lightweight React hooks library for building timers, stopwatches, and real-time clocks with minimal boilerplate.
 
 [![npm alpha](https://img.shields.io/npm/v/%40crup%2Freact-timer-hook/alpha?label=npm%20alpha&color=00b894)](https://www.npmjs.com/package/@crup/react-timer-hook?activeTab=versions)
 [![npm downloads](https://img.shields.io/npm/dm/%40crup%2Freact-timer-hook?color=0f766e)](https://www.npmjs.com/package/@crup/react-timer-hook)
@@ -17,7 +17,7 @@
 
 Timer hooks look simple until real apps need pause/resume semantics, Strict Mode cleanup, async callbacks, polling that does not overlap, and lists with dozens of independent timers.
 
-`@crup/react-timer-hook` starts with a tiny core and lets your app compose the heavier pieces only when it needs them:
+`@crup/react-timer-hook` starts with a ~1.2 kB timer core and lets your app compose the heavier pieces only when it needs them:
 
 - ⏱️ `useTimer()` from the root package for one lifecycle: stopwatch, countdown, clock, or custom flow.
 - 🔋 Batteries are optional: schedules, timer groups, duration helpers, and diagnostics live in subpath imports.

@@ -3,6 +3,6 @@
   <circle cx="930" cy="120" r="300" fill="#00b894" opacity="0.18"/>
   <circle cx="220" cy="500" r="240" fill="#007d6b" opacity="0.22"/>
   <text x="80" y="230" fill="#f8fbff" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800">@crup/react-timer-hook</text>
-  <text x="80" y="330" fill="#c7d0df" font-family="Inter, Arial, sans-serif" font-size="42">React timer primitives for real apps</text>
-  <text x="80" y="410" fill="#00d1aa" font-family="Inter, Arial, sans-serif" font-size="34">countdowns • stopwatches • schedules • timer groups</text>
+  <text x="80" y="330" fill="#c7d0df" font-family="Inter, Arial, sans-serif" font-size="42">Lightweight React hooks with minimal boilerplate</text>
+  <text x="80" y="410" fill="#00d1aa" font-family="Inter, Arial, sans-serif" font-size="34">timers • stopwatches • real-time clocks</text>
 </svg>

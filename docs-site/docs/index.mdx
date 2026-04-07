@@ -1,17 +1,17 @@
 ---
-title: React timer hooks
+title: Lightweight React timer hooks
 slug: /
-description: React timer primitives for countdowns, stopwatches, clocks, polling schedules, and many independent timer lifecycles.
+description: A lightweight React hooks library for building timers, stopwatches, and real-time clocks with minimal boilerplate.
 ---
 
 import RecipePlayground from '@site/src/components/RecipePlayground';
 import { StopwatchSample, AbsoluteCountdownSample, TimerGroupSample } from '../samples/recipes';
 
-# React timer hooks
+# Lightweight React timer hooks
 
-`@crup/react-timer-hook` gives React apps a small root timer primitive and optional subpath hooks for schedules, groups, diagnostics, and duration helpers.
+`@crup/react-timer-hook` is a lightweight React hooks library for building timers, stopwatches, and real-time clocks with minimal boilerplate.
 
-It is built for Strict Mode, rerenders, async callbacks, cleanup, and pages with many independent timers.
+Start with the ~1.2 kB core hook, then compose opt-in batteries for schedules, diagnostics, duration helpers, and pages with many independent timers.
 
 ```sh
 npm install @crup/react-timer-hook@alpha
