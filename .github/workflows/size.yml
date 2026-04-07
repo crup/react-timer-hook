@@ -39,7 +39,7 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm build
-          pnpm size:json > ../head-size.json
+          node scripts/size-report.mjs --json > ../head-size.json
 
       - name: Build base
         working-directory: base
@@ -47,7 +47,7 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm build
-          pnpm size:json > ../base-size.json
+          node scripts/size-report.mjs --json > ../base-size.json
 
       - name: Compare size
         run: |
