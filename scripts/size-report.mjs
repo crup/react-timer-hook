@@ -9,6 +9,7 @@ const entries = [
   ['schedules add-on', 'dist/schedules.js'],
   ['duration helper', 'dist/duration.js'],
   ['diagnostics helper', 'dist/diagnostics.js'],
+  ['MCP docs server', 'dist/mcp/server.js'],
   ['core CJS', 'dist/index.cjs'],
   ['timer group CJS', 'dist/group.cjs'],
   ['schedules CJS', 'dist/schedules.cjs'],

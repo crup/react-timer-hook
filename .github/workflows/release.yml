@@ -169,6 +169,10 @@ jobs:
         id: docs
         run: pnpm docs:build
 
+      - name: Check bundled MCP server
+        id: mcp
+        run: pnpm mcp:check
+
       - name: README check
         id: readme
         run: pnpm readme:check
@@ -196,6 +200,7 @@ jobs:
             echo "| Tests | ${{ steps.test.outcome }} |"
             echo "| Package build | ${{ steps.build.outcome }} |"
             echo "| Docs build | ${{ steps.docs.outcome }} |"
+            echo "| MCP server check | ${{ steps.mcp.outcome }} |"
             echo "| README check | ${{ steps.readme.outcome }} |"
             echo "| Size report | ${{ steps.size.outcome }} |"
             echo "| Pack dry run | ${{ steps.pack.outcome }} |"

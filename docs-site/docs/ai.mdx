@@ -29,10 +29,10 @@ pnpm ai:context
 
 ## MCP server
 
-Run the local docs MCP server:
+Run the published docs MCP server:
 
 ```sh
-node /absolute/path/to/react-timer-hook/mcp/server.mjs
+npx -y @crup/react-timer-hook@latest
 ```
 
 MCP client config:
@@ -41,12 +41,20 @@ MCP client config:
 {
   "mcpServers": {
     "react-timer-hook-docs": {
-      "command": "node",
-      "args": ["/absolute/path/to/react-timer-hook/mcp/server.mjs"]
+      "command": "npx",
+      "args": ["-y", "@crup/react-timer-hook@latest"]
     }
   }
 }
 ```
+
+If the package is already installed locally, you can also run:
+
+```sh
+./node_modules/.bin/react-timer-hook-mcp
+```
+
+The bin shim points at the same bundled file: `node_modules/@crup/react-timer-hook/dist/mcp/server.js`.
 
 It exposes:
 
@@ -62,4 +70,4 @@ Verify locally:
 printf '{"jsonrpc":"2.0","id":1,"method":"resources/list"}\n' | pnpm mcp:docs
 ```
 
-The npm package stays runtime-focused. AI context and MCP helpers live in the source repository for contributors and coding agents.
+The MCP server is bundled and minified into the npm package. It only exposes documentation resources; the React runtime remains separate from the MCP helper.

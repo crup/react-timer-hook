@@ -1,7 +1,47 @@
 import { createInterface } from 'node:readline';
 import { readFileSync } from 'node:fs';
 
-const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
+const pkg = readPackage();
+const apiText = `# @crup/react-timer-hook
+
+A lightweight React hooks library for building timers, stopwatches, and real-time clocks with minimal boilerplate.
+
+Docs: https://crup.github.io/react-timer-hook/
+Package: @crup/react-timer-hook
+Install: npm install @crup/react-timer-hook@latest
+Runtime: Node 18+ and React 18+
+Repository: https://github.com/crup/react-timer-hook
+
+Public exports:
+- @crup/react-timer-hook: useTimer(options) for one timer lifecycle.
+- @crup/react-timer-hook/group: useTimerGroup(options) for many keyed independent lifecycles with one shared scheduler.
+- @crup/react-timer-hook/schedules: useScheduledTimer(options) for schedule-enabled timers with timing context.
+- @crup/react-timer-hook/duration: durationParts(milliseconds) for duration display helper values.
+- @crup/react-timer-hook/diagnostics: consoleTimerDiagnostics(options) for optional event logging.
+
+Core rules:
+- Use timer.now for wall-clock deadlines and clocks.
+- Use timer.elapsedMilliseconds for active elapsed duration.
+- Use endWhen(snapshot) to end a lifecycle.
+- Use onError(error, snapshot, controls) when onEnd can throw or reject.
+- Use cancel(reason) for terminal early stops.
+- Keep formatting, timezone, retries, and business rules in userland.
+
+Schedules:
+- Use useScheduledTimer() from @crup/react-timer-hook/schedules.
+- Schedules are opt-in and default to overlap: "skip".
+- Schedule callbacks receive context with scheduledAt, firedAt, nextRunAt, overdueCount, and effectiveEveryMs.
+- Schedule callbacks can define onError(error, snapshot, controls, context); otherwise timer or item onError is used.
+
+Recipes:
+- Wall clock: new Date(timer.now).
+- Stopwatch: render timer.elapsedMilliseconds.
+- Absolute countdown: Math.max(0, expiresAt - timer.now).
+- Pausable countdown: durationMs - timer.elapsedMilliseconds.
+- OTP resend: disable the resend button until elapsedMilliseconds reaches the cooldown.
+- Polling: use schedules with overlap: "skip".
+- Many independent timers: use useTimerGroup().
+`;
 
 const resources = {
   'react-timer-hook://package': {
@@ -12,7 +52,7 @@ const resources = {
         name: pkg.name,
         version: pkg.version,
         docs: 'https://crup.github.io/react-timer-hook/',
-        install: `npm install ${pkg.name}@alpha`,
+        install: `npm install ${pkg.name}@latest`,
       },
       null,
       2,
@@ -21,7 +61,7 @@ const resources = {
   'react-timer-hook://api': {
     name: 'API',
     mimeType: 'text/markdown',
-    text: readFileSync(new URL('../docs-site/static/llms-full.txt', import.meta.url), 'utf8'),
+    text: apiText,
   },
   'react-timer-hook://recipes': {
     name: 'Recipes',
@@ -100,4 +140,16 @@ function respond(id, result) {
 
 function respondError(id, code, message) {
   process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } })}\n`);
+}
+
+function readPackage() {
+  for (const path of ['../../package.json', '../package.json']) {
+    try {
+      return JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
+    } catch {
+      // Try the next path. The bundled file runs from dist/mcp, while the source file runs from mcp.
+    }
+  }
+
+  return { name: '@crup/react-timer-hook', version: '0.0.0' };
 }

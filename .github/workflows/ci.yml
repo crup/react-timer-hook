@@ -50,7 +50,11 @@ jobs:
         id: docs
         run: pnpm docs:build
 
-      - name: 9. Check README
+      - name: 9. Check bundled MCP server
+        id: mcp
+        run: pnpm mcp:check
+
+      - name: 10. Check README
         id: readme
         run: pnpm readme:check
 
@@ -67,5 +71,6 @@ jobs:
             echo "| Tests | ${{ steps.test.outcome }} |"
             echo "| Package build | ${{ steps.build.outcome }} |"
             echo "| Docs build | ${{ steps.docs.outcome }} |"
+            echo "| MCP server check | ${{ steps.mcp.outcome }} |"
             echo "| README check | ${{ steps.readme.outcome }} |"
           } >> "$GITHUB_STEP_SUMMARY"
