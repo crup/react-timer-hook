@@ -1,0 +1,66 @@
+---
+title: Schedule use cases
+description: Compose active timer lifecycles with polling, heartbeat checks, and cadence callbacks.
+---
+
+# Schedule use cases
+
+```tsx
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
+```
+
+Use schedules when a timer needs side effects on a cadence. The timer lifecycle and schedule cadence are separate: `updateIntervalMs` updates UI, `everyMs` runs the callback.
+
+## Poll backend status
+
+```tsx
+const timer = useScheduledTimer({
+  autoStart: true,
+  updateIntervalMs: 1000,
+  endWhen: snapshot => snapshot.now >= expiresAt,
+  schedules: [
+    {
+      id: 'auction-status',
+      everyMs: 5000,
+      overlap: 'skip',
+      callback: async (_snapshot, controls) => {
+        const auction = await api.getAuction(auctionId);
+        if (auction.status === 'sold') controls.cancel('sold');
+      },
+    },
+  ],
+});
+```
+
+Use this for auction status checks, job status polling, order payment status, device heartbeat checks, and reservation validation.
+
+## Use timing context
+
+```tsx
+callback: async (_snapshot, _controls, context) => {
+  metrics.timing('poll.delay', context.firedAt - context.scheduledAt);
+  metrics.count('poll.overdue', context.overdueCount);
+}
+```
+
+`overdueCount` tells you how many intervals were missed because the browser, JS thread, or callback work was late.
+
+## Stop the lifecycle from a schedule
+
+```tsx
+schedules: [
+  {
+    id: 'payment-status',
+    everyMs: 3000,
+    callback: async (_snapshot, controls) => {
+      const payment = await api.getPayment(paymentId);
+      if (payment.status === 'paid') controls.cancel('paid');
+      if (payment.status === 'failed') controls.cancel('failed');
+    },
+  },
+]
+```
+
+`cancel(reason)` is for terminal early stops. It does not call `onEnd`.
+
+For live demos, see [polling schedule](/recipes/intermediate/polling-schedule), [poll and cancel](/recipes/intermediate/poll-and-cancel), and [backend event stop](/recipes/intermediate/backend-event-stop).

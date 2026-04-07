@@ -1,0 +1,42 @@
+---
+title: Use cases
+description: Pick the smallest composition for clocks, countdowns, schedules, and many independent timers.
+---
+
+# Use cases
+
+Start with the root hook, then add a subpath only when the screen needs it.
+
+| Need | Use | Import | Live recipe |
+| --- | --- | --- | --- |
+| Stopwatch, clock, absolute deadline, pausable countdown | Core | `@crup/react-timer-hook` | [Stopwatch](/recipes/basic/stopwatch) |
+| Human display parts like days/minutes/seconds | Core + duration | `@crup/react-timer-hook` + `/duration` | [Pausable countdown](/recipes/basic/pausable-countdown) |
+| Polling or cadence callbacks while a timer is active | Schedules | `@crup/react-timer-hook/schedules` | [Polling schedule](/recipes/intermediate/polling-schedule) |
+| Polling that can stop the lifecycle early | Schedules | `@crup/react-timer-hook/schedules` | [Poll and cancel](/recipes/intermediate/poll-and-cancel) |
+| Dozens of rows with independent pause/resume/cancel | Timer group | `@crup/react-timer-hook/group` | [Timer group](/recipes/advanced/timer-group) |
+| Per-row polling or status checks | Timer group + schedules | `@crup/react-timer-hook/group` | [Per-item polling](/recipes/advanced/per-item-polling) |
+| Runtime add/update/remove of timer items | Timer group | `@crup/react-timer-hook/group` | [Dynamic items](/recipes/advanced/dynamic-items) |
+| Development event tracing | Diagnostics | `@crup/react-timer-hook/diagnostics` | [Diagnostics](/recipes/intermediate/debug-logs) |
+
+## Real-world mapping
+
+| Product case | Composition | Why |
+| --- | --- | --- |
+| Auction card countdown | Core | One server deadline, derived from `timer.now`. |
+| Auction list with pause/resume per lot | Timer group | Each row owns lifecycle state and controls. |
+| Auction status polling | Schedules or group schedules | Poll cadence is separate from UI update cadence. |
+| Checkout reservation hold | Core + duration | Pausable duration math and friendly display parts. |
+| Seat map with many expiring holds | Timer group | Many keyed holds, one scheduler. |
+| Upload/job dashboard | Timer group + schedules | Rows can poll status and end independently. |
+| OTP resend button | Core | Short local cooldown with `elapsedMilliseconds`. |
+| Focus/break timer | Core + duration | Pausable countdown based on active elapsed time. |
+| Live clock widget | Core | Derive `new Date(timer.now)`. |
+| Toast expiry with pause-on-hover | Timer group | Each toast can pause, resume, cancel, and remove. |
+
+## Rule of thumb
+
+Use one `useTimer()` for display-only lists when every row can derive from the same `now`.
+
+Use `useTimerGroup()` when rows need independent state, controls, schedules, or callbacks.
+
+Use `useScheduledTimer()` when the timer itself owns cadence callbacks such as polling, heartbeat checks, or autosave pings.

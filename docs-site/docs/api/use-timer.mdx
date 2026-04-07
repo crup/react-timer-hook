@@ -17,6 +17,7 @@ type UseTimerOptions = {
   updateIntervalMs?: number;
   endWhen?: (snapshot: TimerSnapshot) => boolean;
   onEnd?: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
+  onError?: (error: unknown, snapshot: TimerSnapshot, controls: TimerControls) => void;
 };
 ```
 
@@ -25,6 +26,8 @@ type UseTimerOptions = {
 `endWhen` ends the lifecycle when it returns `true`.
 
 `onEnd` fires once per generation. `restart()` creates a new generation.
+
+`onError` receives sync throws and async rejections from `onEnd`.
 
 The root `useTimer()` export is lifecycle-only to keep the default bundle small. Use `@crup/react-timer-hook/schedules` when you need polling schedules and schedule timing context.
 

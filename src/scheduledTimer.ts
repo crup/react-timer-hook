@@ -3,6 +3,7 @@ import { readClock, validatePositiveFinite } from './clocks';
 import { baseDebugEvent, emitDiagnostics } from './debug';
 import {
   evaluateSchedules,
+  getScheduleSignature,
   getNextScheduleDelay,
   syncScheduleStates,
   type ScheduleEvent,
@@ -61,6 +62,7 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
   const schedules = new Map<string, ScheduleState>();
   let snapshot = getTimerItemSnapshot(item, readClock());
   let timeout: ReturnType<typeof setTimeout> | null = null;
+  let scheduleSignature = getScheduleSignature(options.schedules);
 
   const notify = (clock = readClock()) => {
     snapshot = getTimerItemSnapshot(item, clock);
@@ -84,6 +86,7 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
   };
 
   const onEndError = (error: unknown, eventSnapshot: TimerSnapshot, generation: number) => {
+    options.onError?.(error, eventSnapshot, controls);
     emitDiagnostics(options.diagnostics, {
       type: 'callback:error',
       scope: 'timer',
@@ -128,12 +131,12 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
     return false;
   };
 
-  const schedule = () => {
+  const schedule = (emitStart = true) => {
     clear();
     if (item.state.status !== 'running') return;
 
     const delay = getNextScheduleDelay(options.schedules, schedules, readClock().wallNow, options.updateIntervalMs ?? 1000);
-    emit('scheduler:start', getTimerItemSnapshot(item, readClock()));
+    if (emitStart) emit('scheduler:start', getTimerItemSnapshot(item, readClock()));
     timeout = setTimeout(() => {
       if (item.state.status !== 'running') return;
 
@@ -218,9 +221,15 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
     getSnapshot: () => snapshot,
     setOptions: nextOptions => {
       validateOptions(nextOptions);
+      const nextScheduleSignature = getScheduleSignature(nextOptions.schedules);
+      const schedulesChanged = nextScheduleSignature !== scheduleSignature;
       options = nextOptions;
       item.definition = nextOptions;
-      syncScheduleStates(options.schedules, schedules, readClock().wallNow, item.state.status === 'running');
+      if (schedulesChanged) {
+        scheduleSignature = nextScheduleSignature;
+        syncScheduleStates(options.schedules, schedules, readClock().wallNow, item.state.status === 'running');
+        schedule(false);
+      }
     },
     subscribe: listener => {
       listeners.add(listener);

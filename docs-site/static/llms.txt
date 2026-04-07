@@ -18,6 +18,7 @@ Core rules:
 - Use timer.now for wall-clock deadlines and clocks.
 - Use timer.elapsedMilliseconds for active elapsed duration.
 - Use endWhen(snapshot) to end a lifecycle.
+- Use onError(error, snapshot, controls) when onEnd can throw or reject.
 - Use cancel(reason) for terminal early stops.
 - Schedules are opt-in through @crup/react-timer-hook/schedules and default to overlap: 'skip'.
 - Schedule callbacks receive context with scheduledAt, firedAt, nextRunAt, overdueCount, and effectiveEveryMs.

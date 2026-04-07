@@ -7,9 +7,13 @@ description: Clocks, stopwatches, countdowns, and manual timer controls.
 
 Start here when you need a single lifecycle or a display-only timer.
 
-- [Wall clock](./wall-clock)
-- [Stopwatch](./stopwatch)
-- [Absolute countdown](./absolute-countdown)
-- [Pausable countdown](./pausable-countdown)
-- [Manual controls](./manual-controls)
+## Core only
 
+- [Wall clock](./wall-clock): use `timer.now` and format the `Date` in your app.
+- [Stopwatch](./stopwatch): use `elapsedMilliseconds` for active elapsed time.
+- [Absolute countdown](./absolute-countdown): derive remaining time from `expiresAt - timer.now`.
+- [Manual controls](./manual-controls): wire `start`, `pause`, `resume`, `reset`, `restart`, and `cancel`.
+
+## Core + duration
+
+- [Pausable countdown](./pausable-countdown): use `elapsedMilliseconds` and `durationParts()` for display math.

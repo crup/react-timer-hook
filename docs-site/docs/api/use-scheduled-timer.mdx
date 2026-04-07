@@ -19,6 +19,7 @@ type UseScheduledTimerOptions = UseTimerOptions & {
 ```
 
 Schedules run while active and default to `overlap: 'skip'`.
+`onError` comes from `UseTimerOptions` and receives sync throws or async rejections from `onEnd`.
 
 ```ts
 const timer = useScheduledTimer({
@@ -37,3 +38,5 @@ const timer = useScheduledTimer({
 ```
 
 The third callback argument contains `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`.
+
+When the schedule cadence changes, the active scheduler recalculates the next timeout immediately. Changing only the callback keeps the current cadence and uses the latest callback on the next run.

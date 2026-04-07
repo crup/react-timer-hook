@@ -1,0 +1,83 @@
+---
+title: Timer group use cases
+description: Use one scheduler for many keyed timers with independent controls, callbacks, and schedules.
+---
+
+# Timer group use cases
+
+```tsx
+import { useTimerGroup } from '@crup/react-timer-hook/group';
+```
+
+Use `useTimerGroup()` when every row or item needs its own lifecycle.
+
+## Auction lots
+
+```tsx
+const timers = useTimerGroup({
+  updateIntervalMs: 1000,
+  items: auctions.map(auction => ({
+    id: auction.id,
+    autoStart: true,
+    endWhen: snapshot => snapshot.now >= auction.expiresAt,
+    onEnd: () => api.closeAuction(auction.id),
+    onError: error => reportAuctionError(auction.id, error),
+  })),
+});
+
+return auctions.map(auction => {
+  const timer = timers.get(auction.id);
+  const remainingMs = Math.max(0, auction.expiresAt - (timer?.now ?? Date.now()));
+
+  return (
+    <AuctionRow
+      key={auction.id}
+      remainingMs={remainingMs}
+      onPause={() => timers.pause(auction.id)}
+      onResume={() => timers.resume(auction.id)}
+      onCancel={() => timers.cancel(auction.id, 'sold')}
+    />
+  );
+});
+```
+
+## Uploads, jobs, and task dashboards
+
+```tsx
+const timers = useTimerGroup({
+  updateIntervalMs: 500,
+  items: jobs.map(job => ({
+    id: job.id,
+    autoStart: job.status === 'running',
+    endWhen: snapshot => snapshot.elapsedMilliseconds >= job.timeoutMs,
+    schedules: [
+      {
+        id: 'job-status',
+        everyMs: 5000,
+        callback: async (_snapshot, controls) => {
+          const latest = await api.getJob(job.id);
+          if (latest.status === 'complete') controls.cancel('complete');
+          if (latest.status === 'failed') controls.cancel('failed');
+        },
+      },
+    ],
+  })),
+});
+```
+
+Use this for uploads, exports, background jobs, payment attempts, game cooldowns, and multi-step workflows.
+
+## Controlled items
+
+Pass a new `items` array when server data changes. Do not mutate the same array in place.
+
+```tsx
+const items = useMemo(
+  () => holds.map(hold => ({ id: hold.id, autoStart: true })),
+  [holds],
+);
+
+const timers = useTimerGroup({ items });
+```
+
+For live demos, see [timer group](/recipes/advanced/timer-group), [group controls](/recipes/advanced/group-controls), [per-item polling](/recipes/advanced/per-item-polling), and [dynamic items](/recipes/advanced/dynamic-items).

@@ -1,0 +1,68 @@
+---
+title: Composition guide
+description: Combine root and subpath imports without shipping pieces your screen does not use.
+---
+
+# Composition guide
+
+## Import map
+
+| Piece | Import | Use when |
+| --- | --- | --- |
+| Core | `@crup/react-timer-hook` | One lifecycle: stopwatch, countdown, clock, manual controls. |
+| Duration | `@crup/react-timer-hook/duration` | Display `days`, `hours`, `minutes`, `seconds`, and `milliseconds`. |
+| Schedules | `@crup/react-timer-hook/schedules` | Polling, heartbeat checks, cadence callbacks, timing context. |
+| Timer group | `@crup/react-timer-hook/group` | Many keyed timers with independent lifecycle state. |
+| Diagnostics | `@crup/react-timer-hook/diagnostics` | Optional event logging while investigating behavior. |
+
+## Core + duration
+
+```tsx
+import { useTimer } from '@crup/react-timer-hook';
+import { durationParts } from '@crup/react-timer-hook/duration';
+
+const timer = useTimer({ autoStart: true, updateIntervalMs: 1000 });
+const remaining = durationParts(Math.max(0, expiresAt - timer.now));
+```
+
+## Schedules + diagnostics
+
+```tsx
+import { consoleTimerDiagnostics } from '@crup/react-timer-hook/diagnostics';
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
+
+const timer = useScheduledTimer({
+  autoStart: true,
+  diagnostics: consoleTimerDiagnostics({ label: 'auction' }),
+  schedules: [{ id: 'poll', everyMs: 5000, callback: pollAuction }],
+});
+```
+
+## Timer group + per-item schedules
+
+```tsx
+import { useTimerGroup } from '@crup/react-timer-hook/group';
+
+const timers = useTimerGroup({
+  items: jobs.map(job => ({
+    id: job.id,
+    autoStart: true,
+    schedules: [{ id: 'status', everyMs: 5000, callback: () => refreshJob(job.id) }],
+  })),
+});
+```
+
+## Display-only lists
+
+If every row is just a countdown label, use one core timer and derive every row.
+
+```tsx
+const clock = useTimer({ autoStart: true, updateIntervalMs: 1000 });
+
+return auctions.map(auction => {
+  const remainingMs = Math.max(0, auction.expiresAt - clock.now);
+  return <AuctionRow key={auction.id} remainingMs={remainingMs} />;
+});
+```
+
+Use `useTimerGroup()` only when rows need independent pause/resume/cancel/restart, `onEnd`, or per-item schedules.

@@ -3,6 +3,7 @@ import { readClock, validatePositiveFinite } from './clocks';
 import { baseDebugEvent, emitDiagnostics } from './debug';
 import {
   evaluateSchedules,
+  getScheduleSignature,
   getNextScheduleDelay,
   syncScheduleStates,
   type ScheduleEvent,
@@ -44,7 +45,6 @@ type TimerGroupStore = {
   getTimer(id: string): TimerSnapshot | undefined;
   setOptions(options: UseTimerGroupOptions): void;
   subscribe(listener: () => void): () => void;
-  sync(): void;
 };
 
 export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupResult {
@@ -59,10 +59,6 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
     const store = storeRef.current!;
     return () => store.destroy();
   }, []);
-
-  useEffect(() => {
-    storeRef.current!.sync();
-  }, [options.diagnostics, options.items, options.updateIntervalMs]);
 
   const groupSnapshot = useSyncExternalStore(storeRef.current.subscribe, storeRef.current.getSnapshot, storeRef.current.getSnapshot);
 
@@ -82,7 +78,6 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
   let snapshot = createGroupSnapshot(items, readClock().wallNow);
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let syncSignature = getSyncSignature(options);
-  let needsSync = true;
 
   const notify = (clock = readClock()) => {
     snapshot = createGroupSnapshot(items, clock.wallNow);
@@ -112,6 +107,7 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
   };
 
   const onEndError = (item: InternalGroupItem) => (error: unknown, eventSnapshot: TimerSnapshot, generation: number) => {
+    item.definition.onError?.(error, eventSnapshot, itemControls(item.id));
     emitDiagnostics(options.diagnostics, {
       type: 'callback:error',
       scope: 'timer-group',
@@ -166,7 +162,7 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
     return false;
   };
 
-  const schedule = () => {
+  const schedule = (emitStart = true) => {
     clearTimeoutRef();
     const runningItems = Array.from(items.values()).filter(item => item.state.status === 'running');
     if (runningItems.length === 0) return;
@@ -177,7 +173,7 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
       delay = Math.min(delay, getNextScheduleDelay(item.definition.schedules, item.schedules, clock.wallNow, delay));
     }
 
-    emit('scheduler:start', runningItems[0], getTimerItemSnapshot(runningItems[0], clock));
+    if (emitStart) emit('scheduler:start', runningItems[0], getTimerItemSnapshot(runningItems[0], clock));
     timeout = setTimeout(() => {
       const tickClock = readClock();
       for (const item of items.values()) {
@@ -208,17 +204,14 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
     };
     items.set(definition.id, item);
     seedNewSchedules(item, clock.wallNow);
-    if (definition.autoStart) {
-      startTimerState(item.state, clock);
-      processItem(item, clock, true);
-    }
     return { item, added: true };
   };
 
-  const sync = () => {
+  const sync = (syncOptions: { notify?: boolean; process?: boolean; reschedule?: boolean } = {}) => {
+    const notifyListeners = syncOptions.notify ?? true;
+    const processLifecycle = syncOptions.process ?? true;
+    const forceReschedule = syncOptions.reschedule ?? true;
     validateOptions(options);
-    const shouldReschedule = needsSync;
-    needsSync = false;
     const liveIds = new Set<string>();
     let changed = false;
     const clock = readClock();
@@ -231,10 +224,10 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
         if (definition.autoStart && item.state.status === 'idle') {
           if (startTimerState(item.state, clock)) {
             changed = true;
-            changed = processItem(item, clock, true) || changed;
+            if (processLifecycle) changed = processItem(item, clock, true) || changed;
           }
         }
-        changed = processItem(item, clock) || changed;
+        if (processLifecycle) changed = processItem(item, clock) || changed;
       }
 
       for (const id of items.keys()) {
@@ -245,16 +238,26 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
       }
     }
 
-    if (changed) notify(clock);
-    if (changed || shouldReschedule) schedule();
+    if (changed) {
+      if (notifyListeners) {
+        notify(clock);
+      } else {
+        snapshot = createGroupSnapshot(items, clock.wallNow);
+      }
+    }
+    if (changed || forceReschedule) schedule(notifyListeners);
   };
 
   const add = (definition: TimerGroupItem) => {
     validateItems([definition]);
     if (items.has(definition.id)) throw new Error(`Timer item "${definition.id}" already exists`);
-    ensureItem(definition);
+    const { item } = ensureItem(definition);
+    const clock = readClock();
+    if (definition.autoStart && startTimerState(item.state, clock)) {
+      processItem(item, clock, true);
+    }
     syncSignature = getSyncSignature(options);
-    notify();
+    notify(clock);
     schedule();
   };
 
@@ -387,17 +390,18 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
     setOptions: nextOptions => {
       validateOptions(nextOptions);
       const nextSignature = getSyncSignature(nextOptions);
-      if (nextSignature !== syncSignature) {
-        syncSignature = nextSignature;
-        needsSync = true;
-      }
+      const shouldReschedule = nextSignature !== syncSignature;
+      const shouldSync = nextOptions.items !== options.items || shouldReschedule;
       options = nextOptions;
+      if (shouldSync) {
+        syncSignature = nextSignature;
+        sync({ notify: false, process: false, reschedule: shouldReschedule });
+      }
     },
     subscribe: listener => {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    sync,
   };
 }
 
@@ -417,9 +421,7 @@ function getSyncSignature(options: UseTimerGroupOptions): string {
   return [
     options.updateIntervalMs ?? 1000,
     ...(options.items ?? []).map(item => {
-      const schedules = item.schedules
-        ?.map((schedule, index) => `${schedule.id ?? index}:${schedule.everyMs}:${schedule.leading ?? false}:${schedule.overlap ?? 'skip'}`)
-        .join(',');
+      const schedules = getScheduleSignature(item.schedules);
       return `${item.id}:${item.autoStart ?? false}:${schedules ?? ''}`;
     }),
   ].join('|');

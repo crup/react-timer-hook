@@ -7,8 +7,16 @@ description: End callbacks, schedules, early cancellation, backend events, and d
 
 Use these patterns when the timer coordinates with side effects or external app state.
 
-- [Once-only onEnd](./once-only-on-end)
-- [Polling schedule](./polling-schedule)
-- [Poll and cancel](./poll-and-cancel)
-- [Backend event stop](./backend-event-stop)
-- [Diagnostics](./debug-logs)
+## Core lifecycle callbacks
+
+- [Once-only onEnd](./once-only-on-end): run completion logic once per generation.
+- [Backend event stop](./backend-event-stop): cancel a timer from a WebSocket, SSE event, or external subscription.
+
+## Schedules
+
+- [Polling schedule](./polling-schedule): run cadence callbacks while the timer is active.
+- [Poll and cancel](./poll-and-cancel): stop early when backend state says the flow is closed.
+
+## Diagnostics
+
+- [Diagnostics](./debug-logs): emit optional lifecycle and schedule events while investigating behavior.

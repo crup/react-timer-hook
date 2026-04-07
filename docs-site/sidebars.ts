@@ -7,6 +7,12 @@ const sidebars: SidebarsConfig = {
     'ai',
     {
       type: 'category',
+      label: 'Use cases',
+      link: { type: 'doc', id: 'use-cases/index' },
+      items: ['use-cases/core', 'use-cases/schedules', 'use-cases/groups', 'use-cases/composition'],
+    },
+    {
+      type: 'category',
       label: 'API',
       items: ['api/use-timer', 'api/use-scheduled-timer', 'api/use-timer-group', 'api/types'],
     },

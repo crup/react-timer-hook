@@ -42,4 +42,48 @@ describe('useTimerGroup sync', () => {
     act(() => vi.advanceTimersByTime(100));
     expect(result.current.get('a')?.status).toBe('ended');
   });
+
+  it('uses new item callbacks after a controlled items rerender', () => {
+    const firstEnd = vi.fn();
+    const secondEnd = vi.fn();
+    const { result, rerender } = renderHook(({ onEnd }) =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        items: [{ id: 'a', autoStart: true, endWhen: snapshot => snapshot.elapsedMilliseconds >= 200, onEnd }],
+      }),
+      { initialProps: { onEnd: firstEnd } },
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    expect(result.current.get('a')?.tick).toBe(1);
+
+    rerender({ onEnd: secondEnd });
+    act(() => vi.advanceTimersByTime(100));
+
+    expect(firstEnd).not.toHaveBeenCalled();
+    expect(secondEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('reschedules controlled item schedules when cadence changes', async () => {
+    const callback = vi.fn();
+    const { rerender } = renderHook(({ everyMs }) =>
+      useTimerGroup({
+        updateIntervalMs: 1000,
+        items: [
+          {
+            id: 'a',
+            autoStart: true,
+            schedules: [{ id: 'poll', everyMs, callback }],
+          },
+        ],
+      }),
+      { initialProps: { everyMs: 1000 } },
+    );
+
+    rerender({ everyMs: 100 });
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
 });

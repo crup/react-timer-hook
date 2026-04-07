@@ -39,7 +39,14 @@ pnpm add @crup/react-timer-hook@alpha
 - `useTimerGroup()` from `/group` for many keyed independent lifecycles
 - `durationParts()` from `/duration` for duration display math
 
-The library owns scheduling and cleanup. Your app owns formatting, timezone, data fetching policy, and business rules.
+Use the root hook first. Add subpaths only when a screen needs schedules, many independent timers, display parts, or diagnostics.
+
+## Use-case shortcuts
+
+- [Core use cases](./use-cases/core): stopwatch, wall clock, absolute deadline, pausable duration countdown.
+- [Schedule use cases](./use-cases/schedules): polling, heartbeat checks, timing context, early cancel.
+- [Timer group use cases](./use-cases/groups): auctions, checkout holds, upload rows, job dashboards.
+- [Composition guide](./use-cases/composition): combine core, duration, schedules, groups, and diagnostics.
 
 ## Recipe routes
 

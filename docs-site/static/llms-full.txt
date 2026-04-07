@@ -25,6 +25,7 @@ useTimer({
   updateIntervalMs?: number;
   endWhen?: (snapshot: TimerSnapshot) => boolean;
   onEnd?: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
+  onError?: (error: unknown, snapshot: TimerSnapshot, controls: TimerControls) => void;
 })
 ```
 
@@ -39,6 +40,14 @@ Use `useTimerGroup()` for many keyed timers that each need independent lifecycle
 Use `useScheduledTimer()` from `@crup/react-timer-hook/schedules` for app-owned side effects. Default overlap behavior is `skip`.
 
 Schedule callbacks receive `(snapshot, controls, context)`. `context` includes `scheduleId`, `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`.
+
+## Use cases
+
+- `/use-cases/`: choose by composition.
+- `/use-cases/core/`: clock, stopwatch, absolute deadline, pausable duration countdown.
+- `/use-cases/schedules/`: polling, heartbeat checks, timing context, early cancel.
+- `/use-cases/groups/`: auctions, checkout holds, upload rows, job dashboards.
+- `/use-cases/composition/`: combine core, duration, schedules, groups, and diagnostics.
 
 ## Recipes index
 

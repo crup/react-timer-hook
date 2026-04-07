@@ -1,0 +1,82 @@
+---
+title: Core use cases
+description: "Use the root import for one lifecycle: clock, stopwatch, countdown, timeout, and manual controls."
+---
+
+# Core use cases
+
+```tsx
+import { useTimer } from '@crup/react-timer-hook';
+```
+
+The root hook is the smallest path. It gives you lifecycle state, `now`, `elapsedMilliseconds`, and controls.
+
+## Wall clock
+
+```tsx
+const clock = useTimer({ autoStart: true, updateIntervalMs: 1000 });
+const date = new Date(clock.now);
+```
+
+Use this for live clocks, dashboard timestamps, and "last updated" UI. Your app chooses locale and formatting.
+
+## Stopwatch
+
+```tsx
+const stopwatch = useTimer({ updateIntervalMs: 100 });
+
+return (
+  <>
+    <output>{(stopwatch.elapsedMilliseconds / 1000).toFixed(1)}s</output>
+    <button disabled={!stopwatch.isIdle} onClick={stopwatch.start}>Start</button>
+    <button disabled={!stopwatch.isRunning} onClick={stopwatch.pause}>Pause</button>
+    <button disabled={!stopwatch.isPaused} onClick={stopwatch.resume}>Resume</button>
+    <button onClick={stopwatch.restart}>Restart</button>
+  </>
+);
+```
+
+Use this for workouts, task timers, calls, recordings, and admin tools.
+
+## Absolute deadline
+
+```tsx
+const timer = useTimer({
+  autoStart: true,
+  endWhen: snapshot => snapshot.now >= expiresAt,
+  onEnd: () => closeAuction(auctionId),
+});
+
+const remainingMs = Math.max(0, expiresAt - timer.now);
+```
+
+Use `now` for server deadlines: auctions, reservations, job expiry, and signed URL expiry.
+
+## Pausable duration countdown
+
+```tsx
+const durationMs = 5 * 60 * 1000;
+const timer = useTimer({
+  autoStart: true,
+  endWhen: snapshot => snapshot.elapsedMilliseconds >= durationMs,
+});
+
+const remainingMs = Math.max(0, durationMs - timer.elapsedMilliseconds);
+```
+
+Use `elapsedMilliseconds` for active-time countdowns where pause/resume should freeze progress.
+
+## Error handling
+
+`onEnd` runs once per generation. If the callback can fail, pass `onError`.
+
+```tsx
+const timer = useTimer({
+  autoStart: true,
+  endWhen: snapshot => snapshot.elapsedMilliseconds >= 1000,
+  onEnd: () => saveCompletion(),
+  onError: error => reportError(error),
+});
+```
+
+For live demos, see [wall clock](/recipes/basic/wall-clock), [stopwatch](/recipes/basic/stopwatch), and [absolute countdown](/recipes/basic/absolute-countdown).

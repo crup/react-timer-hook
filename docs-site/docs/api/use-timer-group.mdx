@@ -27,9 +27,14 @@ type TimerGroupItem = {
   autoStart?: boolean;
   endWhen?: (snapshot: TimerSnapshot) => boolean;
   onEnd?: (snapshot: TimerSnapshot, controls: TimerGroupItemControls) => void | Promise<void>;
+  onError?: (error: unknown, snapshot: TimerSnapshot, controls: TimerGroupItemControls) => void;
   schedules?: TimerSchedule[];
 };
 ```
+
+`onError` receives sync throws and async rejections from that item's `onEnd`.
+
+When `items` is controlled by props, pass a new array/object when item definitions change. The store preserves state for existing IDs and syncs new callbacks, deadlines, and schedules without resetting the item generation.
 
 ## Result
 

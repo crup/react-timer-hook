@@ -5,6 +5,18 @@ description: Public TypeScript types exported by the package.
 
 # Types
 
+## Lifecycle error callback
+
+```ts
+onError?: (
+  error: unknown,
+  snapshot: TimerSnapshot,
+  controls: TimerControls,
+) => void;
+```
+
+Use `onError` when `onEnd` can throw or return a rejected promise.
+
 ## Duration parts
 
 ```ts

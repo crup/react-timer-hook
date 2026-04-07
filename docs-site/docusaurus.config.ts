@@ -68,6 +68,7 @@ const config: Config = {
       items: [
         { to: '/', label: 'Docs', position: 'left' },
         { to: '/getting-started', label: 'Start', position: 'left' },
+        { to: '/use-cases', label: 'Use cases', position: 'left' },
         { to: '/recipes/basic', label: 'Recipes', position: 'left' },
         { href: 'https://www.npmjs.com/package/@crup/react-timer-hook', label: 'npm', position: 'right' },
         { href: 'https://github.com/crup/react-timer-hook', label: 'GitHub', position: 'right' },
@@ -80,6 +81,7 @@ const config: Config = {
           title: 'Docs',
           items: [
             { label: 'Getting started', to: '/getting-started' },
+            { label: 'Use cases', to: '/use-cases' },
             { label: 'useTimer', to: '/api/use-timer' },
             { label: 'useTimerGroup', to: '/api/use-timer-group' },
           ],

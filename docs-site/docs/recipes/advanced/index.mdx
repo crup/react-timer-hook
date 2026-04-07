@@ -7,9 +7,16 @@ description: Many timers, independent group lifecycles, item polling, and runtim
 
 Use these patterns for lists, dashboards, auctions, reservation holds, jobs, and task boards.
 
-- [Many display countdowns](./many-display-countdowns)
-- [Timer group](./timer-group)
-- [Group controls](./group-controls)
-- [Per-item polling](./per-item-polling)
-- [Dynamic items](./dynamic-items)
+## Core for display-only lists
 
+- [Many display countdowns](./many-display-countdowns): one shared `useTimer()` drives many derived countdown labels.
+
+## Timer group
+
+- [Timer group](./timer-group): many keyed lifecycles with independent state.
+- [Group controls](./group-controls): pause, resume, restart, and cancel many items together.
+- [Dynamic items](./dynamic-items): add, update, and remove timers at runtime.
+
+## Timer group + schedules
+
+- [Per-item polling](./per-item-polling): each row owns its own schedule cadence.

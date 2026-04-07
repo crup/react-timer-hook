@@ -128,6 +128,25 @@ describe('useTimer lifecycle', () => {
     act(() => resolveEnd());
   });
 
+  it('routes async onEnd errors to onError', async () => {
+    const onError = vi.fn();
+
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        endWhen: snapshot => snapshot.elapsedMilliseconds >= 100,
+        onEnd: () => Promise.reject(new Error('boom')),
+        onError,
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(onError).toHaveBeenCalledWith(expect.any(Error), expect.objectContaining({ status: 'ended' }), expect.anything());
+  });
+
   it('throws for invalid update intervals', () => {
     expect(() => renderHook(() => useTimer({ updateIntervalMs: 0 }))).toThrow(RangeError);
   });

@@ -20,11 +20,11 @@ Timers get messy when a product needs pause and resume, countdowns tied to serve
 `@crup/react-timer-hook` keeps the default import small and lets you add only the pieces your screen needs:
 
 - ⏱️ `useTimer()` from the root package for one lifecycle: stopwatch, countdown, clock, or custom flow.
-- 🔋 Add-ons are opt-in: schedules, timer groups, duration helpers, and diagnostics live in subpath imports.
+- 🔋 Add schedules, timer groups, duration helpers, and diagnostics only when a screen needs them.
 - 🧭 `useTimerGroup()` from `/group` for many keyed lifecycles with one shared scheduler.
 - 📡 `useScheduledTimer()` from `/schedules` for polling and timing context.
 - 🧩 `durationParts()` from `/duration` for common display math.
-- 🧪 Tested for React Strict Mode, rerenders, async callbacks, cleanup, and multi-timer screens.
+- 🧪 Covered for rerenders, React Strict Mode, async callbacks, cleanup, and multi-timer screens.
 - 🤖 AI-ready docs are available through hosted `llms.txt`, `llms-full.txt`, and an optional MCP docs helper.
 
 ## Install
@@ -50,6 +50,22 @@ Each recipe has a live playground and a focused code sample:
 - Basic: [wall clock](https://crup.github.io/react-timer-hook/recipes/basic/wall-clock/), [stopwatch](https://crup.github.io/react-timer-hook/recipes/basic/stopwatch/), [absolute countdown](https://crup.github.io/react-timer-hook/recipes/basic/absolute-countdown/), [pausable countdown](https://crup.github.io/react-timer-hook/recipes/basic/pausable-countdown/), [manual controls](https://crup.github.io/react-timer-hook/recipes/basic/manual-controls/)
 - Intermediate: [once-only onEnd](https://crup.github.io/react-timer-hook/recipes/intermediate/once-only-on-end/), [polling schedule](https://crup.github.io/react-timer-hook/recipes/intermediate/polling-schedule/), [poll and cancel](https://crup.github.io/react-timer-hook/recipes/intermediate/poll-and-cancel/), [backend event stop](https://crup.github.io/react-timer-hook/recipes/intermediate/backend-event-stop/), [diagnostics](https://crup.github.io/react-timer-hook/recipes/intermediate/debug-logs/)
 - Advanced: [many display countdowns](https://crup.github.io/react-timer-hook/recipes/advanced/many-display-countdowns/), [timer group](https://crup.github.io/react-timer-hook/recipes/advanced/timer-group/), [group controls](https://crup.github.io/react-timer-hook/recipes/advanced/group-controls/), [per-item polling](https://crup.github.io/react-timer-hook/recipes/advanced/per-item-polling/), [dynamic items](https://crup.github.io/react-timer-hook/recipes/advanced/dynamic-items/)
+
+## Use cases
+
+| Product case | Use | Import | Recipe |
+| --- | --- | --- | --- |
+| Stopwatch, call timer, workout timer | Core | `@crup/react-timer-hook` | [Stopwatch](https://crup.github.io/react-timer-hook/recipes/basic/stopwatch/) |
+| Wall clock or "last updated" display | Core | `@crup/react-timer-hook` | [Wall clock](https://crup.github.io/react-timer-hook/recipes/basic/wall-clock/) |
+| Auction, reservation, or job deadline | Core | `@crup/react-timer-hook` | [Absolute countdown](https://crup.github.io/react-timer-hook/recipes/basic/absolute-countdown/) |
+| Focus timer or checkout hold that pauses | Core + duration | `@crup/react-timer-hook` + `/duration` | [Pausable countdown](https://crup.github.io/react-timer-hook/recipes/basic/pausable-countdown/) |
+| Backend status polling | Schedules | `@crup/react-timer-hook/schedules` | [Polling schedule](https://crup.github.io/react-timer-hook/recipes/intermediate/polling-schedule/) |
+| Polling that can close early | Schedules | `@crup/react-timer-hook/schedules` | [Poll and cancel](https://crup.github.io/react-timer-hook/recipes/intermediate/poll-and-cancel/) |
+| Auction list with independent row controls | Timer group | `@crup/react-timer-hook/group` | [Timer group](https://crup.github.io/react-timer-hook/recipes/advanced/timer-group/) |
+| Upload/job dashboard with per-row polling | Timer group + schedules | `@crup/react-timer-hook/group` | [Per-item polling](https://crup.github.io/react-timer-hook/recipes/advanced/per-item-polling/) |
+| Toast expiry or runtime item timers | Timer group | `@crup/react-timer-hook/group` | [Dynamic items](https://crup.github.io/react-timer-hook/recipes/advanced/dynamic-items/) |
+
+See the full use-case guide: https://crup.github.io/react-timer-hook/use-cases/
 
 ## Quick examples
 
@@ -152,6 +168,7 @@ const timers = useTimerGroup({
 | `updateIntervalMs` | `number` | No | Render/update cadence in milliseconds. Defaults to `1000`. This does not define elapsed time; elapsed time is calculated from timestamps. Use a smaller value like `100` or `20` when the UI needs finer updates. |
 | `endWhen` | `(snapshot) => boolean` | No | Ends the lifecycle when it returns `true`. Use this for countdowns, timeouts, and custom stop conditions. |
 | `onEnd` | `(snapshot, controls) => void \| Promise<void>` | No | Called once per generation when `endWhen` ends the lifecycle. `restart()` creates a new generation. |
+| `onError` | `(error, snapshot, controls) => void` | No | Handles sync throws and async rejections from `onEnd`. |
 
 ### `useScheduledTimer()` settings
 
@@ -163,6 +180,7 @@ Import from `@crup/react-timer-hook/schedules` when you need polling or schedule
 | `updateIntervalMs` | `number` | No | Render/update cadence in milliseconds. Defaults to `1000`. Scheduled callbacks can run on their own cadence. |
 | `endWhen` | `(snapshot) => boolean` | No | Ends the lifecycle when it returns `true`. |
 | `onEnd` | `(snapshot, controls) => void \| Promise<void>` | No | Called once per generation when `endWhen` ends the lifecycle. |
+| `onError` | `(error, snapshot, controls) => void` | No | Handles sync throws and async rejections from `onEnd`. |
 | `schedules` | `TimerSchedule[]` | No | Scheduled side effects that run while the timer is active. Async overlap defaults to `skip`. |
 | `diagnostics` | `TimerDiagnostics` | No | Optional lifecycle and schedule events. No logs are emitted unless you pass a logger. |
 
@@ -194,6 +212,7 @@ Import from `@crup/react-timer-hook/group` when many keyed items need independen
 | `autoStart` | `boolean` | No | Starts the item automatically when it is added or synced. Defaults to `false`. |
 | `endWhen` | `(snapshot) => boolean` | No | Ends that item when it returns `true`. |
 | `onEnd` | `(snapshot, controls) => void \| Promise<void>` | No | Called once per item generation when that item ends naturally. |
+| `onError` | `(error, snapshot, controls) => void` | No | Handles sync throws and async rejections from that item's `onEnd`. |
 | `schedules` | `TimerSchedule[]` | No | Per-item schedules with the same contract as `useScheduledTimer()`. |
 
 ### Values and controls
@@ -227,9 +246,9 @@ The default import stays small. Add the other pieces only when that screen needs
 
 | Piece | Import | Best for | Raw | Gzip | Brotli |
 | --- | --- | --- | ---: | ---: | ---: |
-| ⏱️ Core | `@crup/react-timer-hook` | Stopwatch, countdown, clock, custom lifecycle | 3.82 kB | 1.31 kB | 1.21 kB |
-| 🧭 Timer group | `@crup/react-timer-hook/group` | Many independent row/item timers | 9.75 kB | 3.42 kB | 3.13 kB |
-| 📡 Schedules | `@crup/react-timer-hook/schedules` | Polling, cadence callbacks, overdue timing context | 7.41 kB | 2.57 kB | 2.36 kB |
+| ⏱️ Core | `@crup/react-timer-hook` | Stopwatch, countdown, clock, custom lifecycle | 3.96 kB | 1.37 kB | 1.25 kB |
+| 🧭 Timer group | `@crup/react-timer-hook/group` | Many independent row/item timers | 9.91 kB | 3.51 kB | 3.20 kB |
+| 📡 Schedules | `@crup/react-timer-hook/schedules` | Polling, cadence callbacks, overdue timing context | 7.62 kB | 2.67 kB | 2.46 kB |
 | 🧩 Duration | `@crup/react-timer-hook/duration` | `days`, `hours`, `minutes`, `seconds`, `milliseconds` | 318 B | 224 B | 192 B |
 | 🔎 Diagnostics | `@crup/react-timer-hook/diagnostics` | Optional lifecycle and schedule event logging | 105 B | 115 B | 90 B |
 

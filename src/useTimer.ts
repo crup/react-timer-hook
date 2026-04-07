@@ -66,7 +66,22 @@ function createTimerStore(initialOptions: UseTimerOptions): TimerStore {
   const callOnEnd = (endedSnapshot: TimerSnapshot) => {
     if (endCalledGeneration === state.generation) return;
     endCalledGeneration = state.generation;
-    void options.onEnd?.(endedSnapshot, controls);
+    const reportError = (error: unknown) => {
+      if (options.onError) {
+        options.onError(error, endedSnapshot, controls);
+        return;
+      }
+      setTimeout(() => {
+        throw error;
+      }, 0);
+    };
+    try {
+      Promise.resolve(options.onEnd?.(endedSnapshot, controls)).catch(error => {
+        reportError(error);
+      });
+    } catch (error) {
+      reportError(error);
+    }
   };
 
   const endIfNeeded = (clock: ReturnType<typeof readClock>) => {

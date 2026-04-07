@@ -117,6 +117,24 @@ describe('useTimer schedules', () => {
     expect(secondCallback).toHaveBeenCalledTimes(1);
   });
 
+  it('reschedules immediately when schedule cadence changes', async () => {
+    const callback = vi.fn();
+    const { rerender } = renderHook(({ everyMs }) =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 1000,
+        schedules: [{ id: 'poll', everyMs, callback }],
+      }),
+      { initialProps: { everyMs: 1000 } },
+    );
+
+    rerender({ everyMs: 100 });
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(callback).toHaveBeenCalledTimes(1);
+  });
+
   it('checks schedule cadence independently from render update interval', async () => {
     const callback = vi.fn();
     renderHook(() =>

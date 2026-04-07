@@ -116,6 +116,12 @@ export function syncScheduleStates(
   }
 }
 
+export function getScheduleSignature(schedules: TimerSchedule[] | undefined): string {
+  return (schedules ?? [])
+    .map((schedule, index) => `${schedule.id ?? index}:${schedule.everyMs}:${schedule.leading ?? false}:${schedule.overlap ?? 'skip'}`)
+    .join(',');
+}
+
 export function createScheduleContext(
   schedule: TimerSchedule,
   key: string,

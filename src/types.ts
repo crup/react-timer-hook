@@ -108,6 +108,7 @@ export type UseTimerOptions = {
   updateIntervalMs?: number;
   endWhen?: TimerEndPredicate;
   onEnd?: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
+  onError?: (error: unknown, snapshot: TimerSnapshot, controls: TimerControls) => void;
 };
 
 export type UseScheduledTimerOptions = UseTimerOptions & {
@@ -122,6 +123,7 @@ export type TimerGroupItem = {
   autoStart?: boolean;
   endWhen?: TimerEndPredicate;
   onEnd?: (snapshot: TimerSnapshot, controls: TimerGroupItemControls) => void | Promise<void>;
+  onError?: (error: unknown, snapshot: TimerSnapshot, controls: TimerGroupItemControls) => void;
   schedules?: TimerSchedule[];
 };
 
