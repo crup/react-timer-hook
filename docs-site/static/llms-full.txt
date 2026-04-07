@@ -3,8 +3,8 @@
 ## Install
 
 ```sh
-npm install @crup/react-timer-hook@alpha
-pnpm add @crup/react-timer-hook@alpha
+npm install @crup/react-timer-hook@latest
+pnpm add @crup/react-timer-hook@latest
 ```
 
 Runtime requirements: Node 18+ and React 18+.

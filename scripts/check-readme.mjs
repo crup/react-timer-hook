@@ -7,7 +7,7 @@ const required = [
   'useTimerGroup',
   'durationParts',
   'https://crup.github.io/react-timer-hook/',
-  '@crup/react-timer-hook@alpha',
+  '@crup/react-timer-hook@latest',
   'Bundle size',
   'AI-friendly',
 ];
