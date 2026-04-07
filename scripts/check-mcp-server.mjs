@@ -26,6 +26,7 @@ child.stderr.on('data', chunk => {
 child.stdin.end(
   [
     JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'initialize', params: {} }),
+    JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized', params: {} }),
     JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'resources/list', params: {} }),
     JSON.stringify({
       jsonrpc: '2.0',
@@ -86,7 +87,10 @@ child.on('close', code => {
     process.exit(1);
   }
 
-  if (!tools.some(tool => tool.name === 'get_recipe') || !tools.some(tool => tool.name === 'search_docs')) {
+  if (
+    !tools.some(tool => tool.name === 'get_recipe' && tool.title === 'Get recipe') ||
+    !tools.some(tool => tool.name === 'search_docs' && tool.title === 'Search docs')
+  ) {
     console.error('MCP tools list is missing expected docs tools.');
     process.exit(1);
   }
