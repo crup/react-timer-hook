@@ -297,5 +297,6 @@ Issues, recipes, docs improvements, and focused bug reports are welcome.
 - Read the docs: https://crup.github.io/react-timer-hook/
 - Open an issue: https://github.com/crup/react-timer-hook/issues
 - See the contributing guide: ./CONTRIBUTING.md
+- Release policy: https://crup.github.io/react-timer-hook/project/release-channels/
 
 The package targets Node 18+ and React 18+.

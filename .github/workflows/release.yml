@@ -4,28 +4,58 @@ on:
   workflow_dispatch:
     inputs:
       confirm_stable_release:
-        description: Type "publish-stable" to publish the latest dist-tag.
+        description: Type "publish-stable" to publish to npm latest.
         required: true
         default: alpha-only
+      stable_version:
+        description: Stable version to publish. First stable should be 0.0.1.
+        required: true
+        default: 0.0.1
 
 permissions:
   contents: write
-  pull-requests: write
   id-token: write
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 concurrency:
-  group: release
+  group: stable-release
   cancel-in-progress: false
 
 jobs:
-  release:
-    if: github.ref_name == 'main' && inputs.confirm_stable_release == 'publish-stable'
+  guard:
+    name: 1. Release guard
+    runs-on: ubuntu-latest
+    outputs:
+      stable_version: ${{ steps.guard.outputs.stable_version }}
+    steps:
+      - name: Validate release inputs
+        id: guard
+        run: |
+          if [ "${{ github.ref_name }}" != "main" ]; then
+            echo "Stable releases must run from main. Current ref: ${{ github.ref_name }}" >&2
+            exit 1
+          fi
+
+          if [ "${{ inputs.confirm_stable_release }}" != "publish-stable" ]; then
+            echo "Stable release is locked. Use confirm_stable_release=publish-stable to publish." >&2
+            exit 1
+          fi
+
+          if ! printf '%s' "${{ inputs.stable_version }}" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "stable_version must be a stable semver version like 0.0.1." >&2
+            exit 1
+          fi
+
+          echo "stable_version=${{ inputs.stable_version }}" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: 2. Verify source
+    needs: guard
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout main
         uses: actions/checkout@v4
 
       - name: Setup pnpm
@@ -33,36 +63,154 @@ jobs:
         with:
           version: 10.30.2
 
-      - name: Setup Node
+      - name: Setup Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        id: install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        id: typecheck
+        run: pnpm typecheck
+
+      - name: Tests
+        id: test
+        run: pnpm test
+
+      - name: Build package
+        id: build
+        run: pnpm build
+
+      - name: Build docs
+        id: docs
+        run: pnpm docs:build
+
+      - name: README check
+        id: readme
+        run: pnpm readme:check
+
+      - name: Size report
+        id: size
+        run: pnpm size
+
+      - name: Pack dry run
+        id: pack
+        run: pnpm pack --dry-run
+
+      - name: Verify summary
+        if: always()
+        run: |
+          {
+            echo "## Stable release verify"
+            echo
+            echo "| Stage | Result |"
+            echo "| --- | --- |"
+            echo "| Install | ${{ steps.install.outcome }} |"
+            echo "| Typecheck | ${{ steps.typecheck.outcome }} |"
+            echo "| Tests | ${{ steps.test.outcome }} |"
+            echo "| Package build | ${{ steps.build.outcome }} |"
+            echo "| Docs build | ${{ steps.docs.outcome }} |"
+            echo "| README check | ${{ steps.readme.outcome }} |"
+            echo "| Size report | ${{ steps.size.outcome }} |"
+            echo "| Pack dry run | ${{ steps.pack.outcome }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: 3. Publish npm latest
+    needs: [guard, verify]
+    runs-on: ubuntu-latest
+    outputs:
+      package_version: ${{ steps.version.outputs.package_version }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.2
+
+      - name: Setup Node 24
         uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      - name: Install
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify
-        run: |
-          pnpm typecheck
-          pnpm test
-          pnpm build
-
-      - name: Create release PR or publish
-        uses: changesets/action@v1
-        with:
-          publish: pnpm release
+      - name: Set stable package version
+        id: version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          STABLE_VERSION: ${{ needs.guard.outputs.stable_version }}
+        run: |
+          node -e "const fs = require('node:fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); pkg.version = process.env.STABLE_VERSION; pkg.publishConfig = { access: 'public' }; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');"
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          echo "package_version=$PACKAGE_NAME@$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
 
-  stable-release-locked:
-    if: inputs.confirm_stable_release != 'publish-stable'
+      - name: Fail if version already exists
+        env:
+          PACKAGE_NAME: ${{ steps.version.outputs.package_version }}
+        run: |
+          if npm view "$PACKAGE_NAME" version >/dev/null 2>&1; then
+            echo "$PACKAGE_NAME is already published." >&2
+            exit 1
+          fi
+
+      - name: Build final package
+        run: pnpm build
+
+      - name: Publish latest
+        run: pnpm publish --tag latest --access public --no-git-checks
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  github-release:
+    name: 4. Create GitHub release
+    needs: [guard, publish]
     runs-on: ubuntu-latest
     steps:
-      - name: Stable release is locked
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STABLE_VERSION: ${{ needs.guard.outputs.stable_version }}
+          PACKAGE_VERSION: ${{ needs.publish.outputs.package_version }}
         run: |
-          echo "Stable npm publishing is disabled by default."
-          echo "Use the Prerelease workflow for alpha releases."
-          echo "To intentionally publish latest, rerun this workflow with confirm_stable_release=publish-stable on main."
+          cat > release-notes.md <<EOF
+          Stable npm release for $PACKAGE_VERSION.
+
+          Install:
+
+          \`\`\`sh
+          npm install @crup/react-timer-hook@$STABLE_VERSION
+          \`\`\`
+
+          Docs: https://crup.github.io/react-timer-hook/
+          EOF
+
+          gh release create "v$STABLE_VERSION" \
+            --title "v$STABLE_VERSION" \
+            --notes-file release-notes.md \
+            --target "${{ github.sha }}"
+
+      - name: Release summary
+        run: |
+          {
+            echo "## Stable release published"
+            echo
+            echo "| Field | Value |"
+            echo "| --- | --- |"
+            echo "| Package | ${{ needs.publish.outputs.package_version }} |"
+            echo "| Dist tag | latest |"
+            echo "| GitHub release | v${{ needs.guard.outputs.stable_version }} |"
+          } >> "$GITHUB_STEP_SUMMARY"

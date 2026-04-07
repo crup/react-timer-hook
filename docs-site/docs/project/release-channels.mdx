@@ -1,11 +1,11 @@
 ---
 title: Release channels
-description: Alpha-only release policy before the first stable version.
+description: Alpha and stable release pipeline policy.
 ---
 
 # Release channels
 
-The package is alpha-only until stable publishing is explicitly unlocked.
+The package publishes alpha builds from `next` and stable builds from `main`.
 
 ```sh
 npm install @crup/react-timer-hook@alpha
@@ -14,6 +14,31 @@ npm install @crup/react-timer-hook@alpha
 - `Prerelease` publishes an `0.0.1-alpha.x` version from `next`.
 - `Prerelease` updates the `alpha` dist-tag.
 - Npm requires a `latest` dist-tag, so the workflow keeps `latest` pointing at the current alpha until stable publishing is unlocked.
+- `Release` only runs from `main`.
 - `Release` is manually gated and requires `confirm_stable_release=publish-stable`.
+- The first stable version should be `0.0.1` to match the existing `0.0.1-alpha.x` prerelease line.
 
-Consumers should use `@alpha` until the release policy changes.
+## Stable release stages
+
+The stable release workflow is intentionally split into visible jobs:
+
+| Stage | What it gates |
+| --- | --- |
+| Release guard | Confirms the workflow is running on `main`, the stable confirmation was typed, and the version is stable semver. |
+| Verify source | Runs typecheck, tests, package build, docs build, README check, size report, and pack dry run. |
+| Publish npm latest | Sets the stable version, blocks duplicate publishes, builds the final package, and publishes to npm `latest`. |
+| Create GitHub release | Creates a `vX.Y.Z` GitHub release for the exact `main` commit. |
+
+Recommended flow:
+
+1. Merge feature work into `next`.
+2. Test alpha from `next`.
+3. Open and merge `next` into `main`.
+4. Run `Release` manually on `main` with:
+
+```txt
+confirm_stable_release=publish-stable
+stable_version=0.0.1
+```
+
+Consumers should use `@alpha` until the stable workflow has published `latest`.
