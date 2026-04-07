@@ -28,14 +28,29 @@ const parts = durationParts(90_500);
 ## Schedules
 
 ```ts
+type TimerScheduleContext = {
+  scheduleId: string;
+  scheduledAt: number;
+  firedAt: number;
+  nextRunAt: number;
+  overdueCount: number;
+  effectiveEveryMs: number;
+};
+
 type TimerSchedule = {
   id?: string;
   everyMs: number;
   leading?: boolean;
   overlap?: 'skip' | 'allow';
-  callback: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
+  callback: (
+    snapshot: TimerSnapshot,
+    controls: TimerControls,
+    context: TimerScheduleContext,
+  ) => void | Promise<void>;
 };
 ```
+
+`scheduledAt` is the intended fire time. `firedAt` is when the browser actually ran the callback. `overdueCount` reports how many schedule windows were missed before this callback because the browser, tab, or previous work delayed execution.
 
 ## Debug
 

@@ -36,6 +36,52 @@ describe('useTimerGroup schedules and debug', () => {
     expect(logger).toHaveBeenCalledWith(expect.objectContaining({ type: 'schedule:start', timerId: 'a', scheduleId: 'poll' }));
   });
 
+  it('passes schedule timing context to item callbacks and debug logs', async () => {
+    const callback = vi.fn();
+    const logger = vi.fn();
+    renderHook(() =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        debug: { logger },
+        items: [
+          {
+            id: 'a',
+            autoStart: true,
+            schedules: [{ id: 'poll', everyMs: 100, callback }],
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ now: 100 }),
+      expect.objectContaining({ cancel: expect.any(Function) }),
+      {
+        scheduleId: 'poll',
+        scheduledAt: 100,
+        firedAt: 100,
+        nextRunAt: 200,
+        overdueCount: 0,
+        effectiveEveryMs: 100,
+      },
+    );
+    expect(logger).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'schedule:start',
+        timerId: 'a',
+        scheduleId: 'poll',
+        scheduledAt: 100,
+        firedAt: 100,
+        nextRunAt: 200,
+        overdueCount: 0,
+        effectiveEveryMs: 100,
+      }),
+    );
+  });
+
   it('drives many timers with one cadence', () => {
     const items = Array.from({ length: 100 }, (_, index) => ({ id: String(index), autoStart: true }));
     const { result } = renderHook(() => useTimerGroup({ updateIntervalMs: 100, items }));

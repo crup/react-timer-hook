@@ -20,6 +20,7 @@ import type {
   TimerGroupItemControls,
   TimerGroupResult,
   TimerSchedule,
+  TimerScheduleContext,
   TimerSnapshot,
   UseTimerGroupOptions,
 } from './types';
@@ -120,38 +121,40 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
       scheduleState: GroupScheduleState,
       snapshot: TimerSnapshot,
       generation: number,
+      context: TimerScheduleContext,
     ) => {
       if (scheduleState.pending && (schedule.overlap ?? 'skip') === 'skip') {
+        scheduleState.lastRunAt = context.scheduledAt;
         emitDebug(optionsRef.current.debug, {
           type: 'schedule:skip',
           scope: 'timer-group',
           timerId: item.id,
-          scheduleId: schedule.id ?? key,
           reason: 'overlap',
+          ...context,
           ...baseDebugEvent(snapshot, generation),
         });
         return;
       }
 
-      scheduleState.lastRunAt = snapshot.now;
+      scheduleState.lastRunAt = context.scheduledAt;
       scheduleState.pending = true;
       emitDebug(optionsRef.current.debug, {
         type: 'schedule:start',
         scope: 'timer-group',
         timerId: item.id,
-        scheduleId: schedule.id ?? key,
+        ...context,
         ...baseDebugEvent(snapshot, generation),
       });
 
       Promise.resolve()
-        .then(() => schedule.callback(snapshot, controlsFor(item.id) as TimerControls))
+        .then(() => schedule.callback(snapshot, controlsFor(item.id) as TimerControls, context))
         .then(
           () => {
             emitDebug(optionsRef.current.debug, {
               type: 'schedule:end',
               scope: 'timer-group',
               timerId: item.id,
-              scheduleId: schedule.id ?? key,
+              ...context,
               ...baseDebugEvent(snapshot, generation),
             });
           },
@@ -160,8 +163,8 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
               type: 'schedule:error',
               scope: 'timer-group',
               timerId: item.id,
-              scheduleId: schedule.id ?? key,
               error,
+              ...context,
               ...baseDebugEvent(snapshot, generation),
             });
           },
@@ -192,20 +195,34 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
 
         if (activation && schedule.leading && scheduleState.leadingGeneration !== item.state.generation) {
           scheduleState.leadingGeneration = item.state.generation;
-          runSchedule(item, schedule, key, scheduleState, snapshot, item.state.generation);
+          runSchedule(
+            item,
+            schedule,
+            key,
+            scheduleState,
+            snapshot,
+            item.state.generation,
+            createScheduleContext(schedule, key, snapshot.now, snapshot.now, 0),
+          );
           return;
         }
 
         if (scheduleState.lastRunAt === null) {
           scheduleState.lastRunAt = item.state.startedAt ?? snapshot.now;
-          if (snapshot.now - scheduleState.lastRunAt >= schedule.everyMs) {
-            runSchedule(item, schedule, key, scheduleState, snapshot, item.state.generation);
-          }
-          return;
         }
 
-        if (snapshot.now - scheduleState.lastRunAt >= schedule.everyMs) {
-          runSchedule(item, schedule, key, scheduleState, snapshot, item.state.generation);
+        const dueCount = Math.floor((snapshot.now - scheduleState.lastRunAt) / schedule.everyMs);
+        if (dueCount >= 1) {
+          const scheduledAt = scheduleState.lastRunAt + dueCount * schedule.everyMs;
+          runSchedule(
+            item,
+            schedule,
+            key,
+            scheduleState,
+            snapshot,
+            item.state.generation,
+            createScheduleContext(schedule, key, scheduledAt, snapshot.now, dueCount - 1),
+          );
         }
       });
 
@@ -246,7 +263,7 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
       schedules.forEach((schedule, index) => {
         const key = schedule.id ?? String(index);
         const scheduleState = item.schedules.get(key);
-        const lastRunAt = scheduleState?.lastRunAt ?? item.state.startedAt ?? clock.wallNow;
+        const lastRunAt = scheduleState?.lastRunAt ?? clock.wallNow;
         nextDelay = Math.min(nextDelay, Math.max(1, lastRunAt + schedule.everyMs - clock.wallNow));
       });
     }
@@ -482,4 +499,21 @@ function validateItems(items: TimerGroupItem[] | undefined): void {
     ids.add(item.id);
     item.schedules?.forEach(schedule => validatePositiveFinite(schedule.everyMs, 'schedule.everyMs'));
   });
+}
+
+function createScheduleContext(
+  schedule: TimerSchedule,
+  key: string,
+  scheduledAt: number,
+  firedAt: number,
+  overdueCount: number,
+): TimerScheduleContext {
+  return {
+    scheduleId: schedule.id ?? key,
+    scheduledAt,
+    firedAt,
+    nextRunAt: scheduledAt + schedule.everyMs,
+    overdueCount,
+    effectiveEveryMs: schedule.everyMs,
+  };
 }

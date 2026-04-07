@@ -11,6 +11,8 @@ function useTimerGroup(options?: UseTimerGroupOptions): TimerGroupResult;
 
 Use `useTimerGroup()` when every row needs independent pause, resume, cancel, restart, schedules, or `onEnd`.
 
+Item schedules use the same `TimerSchedule` contract as `useTimer()`, including the third schedule context argument for intended fire time, actual fire time, next run time, and overdue interval count.
+
 ```ts
 type UseTimerGroupOptions = {
   updateIntervalMs?: number;

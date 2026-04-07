@@ -108,7 +108,8 @@ const timer = useTimer({
       id: 'auction-poll',
       everyMs: 5000,
       overlap: 'skip',
-      callback: async (_snapshot, controls) => {
+      callback: async (_snapshot, controls, context) => {
+        console.log(`auction poll fired ${context.firedAt - context.scheduledAt}ms late`);
         const auction = await api.getAuction(auctionId);
         if (auction.status === 'sold') controls.cancel('sold');
       },
@@ -139,9 +140,9 @@ Current build:
 
 | File | Raw | Gzip | Brotli |
 | --- | ---: | ---: | ---: |
-| `dist/index.js` | 12.45 kB | 3.75 kB | 3.36 kB |
-| `dist/index.cjs` | 13.69 kB | 4.01 kB | 3.60 kB |
-| `dist/index.d.ts` | 3.95 kB | 992 B | 888 B |
+| `dist/index.js` | 12.80 kB | 3.88 kB | 3.47 kB |
+| `dist/index.cjs` | 14.04 kB | 4.12 kB | 3.70 kB |
+| `dist/index.d.ts` | 4.32 kB | 1.04 kB | 951 B |
 
 CI writes a size summary to the GitHub Actions UI and posts bundle-size reports on pull requests.
 

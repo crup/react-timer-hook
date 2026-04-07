@@ -13,6 +13,7 @@ export type {
   TimerGroupItemControls,
   TimerGroupResult,
   TimerSchedule,
+  TimerScheduleContext,
   TimerSnapshot,
   TimerStatus,
   UseTimerGroupOptions,

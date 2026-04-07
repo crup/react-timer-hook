@@ -28,7 +28,7 @@ type UseTimerOptions = {
 
 `onEnd` fires once per generation. `restart()` creates a new generation.
 
-Schedules run while active and default to `overlap: 'skip'`.
+Schedules run while active and default to `overlap: 'skip'`. The schedule callback receives a third `context` argument with `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`, so delayed browser timers can be measured without exposing timeout handles.
 
 ## Controls
 

@@ -14,7 +14,7 @@ import {
   toSnapshot,
   type InternalTimerState,
 } from './state';
-import type { TimerControls, TimerSchedule, TimerSnapshot, UseTimerOptions } from './types';
+import type { TimerControls, TimerSchedule, TimerScheduleContext, TimerSnapshot, UseTimerOptions } from './types';
 
 type ScheduleState = {
   lastRunAt: number | null;
@@ -87,35 +87,43 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
   );
 
   const runSchedule = useCallback(
-    (schedule: TimerSchedule, key: string, scheduleState: ScheduleState, snapshot: TimerSnapshot, generation: number) => {
+    (
+      schedule: TimerSchedule,
+      key: string,
+      scheduleState: ScheduleState,
+      snapshot: TimerSnapshot,
+      generation: number,
+      context: TimerScheduleContext,
+    ) => {
       if (scheduleState.pending && (schedule.overlap ?? 'skip') === 'skip') {
+        scheduleState.lastRunAt = context.scheduledAt;
         emitDebug(optionsRef.current.debug, {
           type: 'schedule:skip',
           scope: 'timer',
-          scheduleId: schedule.id ?? key,
           reason: 'overlap',
+          ...context,
           ...baseDebugEvent(snapshot, generation),
         });
         return;
       }
 
-      scheduleState.lastRunAt = snapshot.now;
+      scheduleState.lastRunAt = context.scheduledAt;
       scheduleState.pending = true;
       emitDebug(optionsRef.current.debug, {
         type: 'schedule:start',
         scope: 'timer',
-        scheduleId: schedule.id ?? key,
+        ...context,
         ...baseDebugEvent(snapshot, generation),
       });
 
       Promise.resolve()
-        .then(() => schedule.callback(snapshot, controlsRef.current!))
+        .then(() => schedule.callback(snapshot, controlsRef.current!, context))
         .then(
           () => {
             emitDebug(optionsRef.current.debug, {
               type: 'schedule:end',
               scope: 'timer',
-              scheduleId: schedule.id ?? key,
+              ...context,
               ...baseDebugEvent(snapshot, generation),
             });
           },
@@ -123,8 +131,8 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
             emitDebug(optionsRef.current.debug, {
               type: 'schedule:error',
               scope: 'timer',
-              scheduleId: schedule.id ?? key,
               error,
+              ...context,
               ...baseDebugEvent(snapshot, generation),
             });
           },
@@ -154,17 +162,18 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
 
         if (activation && schedule.leading && scheduleState.leadingGeneration !== generation) {
           scheduleState.leadingGeneration = generation;
-          runSchedule(schedule, key, scheduleState, snapshot, generation);
+          runSchedule(schedule, key, scheduleState, snapshot, generation, createScheduleContext(schedule, key, snapshot.now, snapshot.now, 0));
           return;
         }
 
         if (scheduleState.lastRunAt === null) {
-          scheduleState.lastRunAt = snapshot.now;
-          return;
+          scheduleState.lastRunAt = stateRef.current!.startedAt ?? snapshot.now;
         }
 
-        if (snapshot.now - scheduleState.lastRunAt >= schedule.everyMs) {
-          runSchedule(schedule, key, scheduleState, snapshot, generation);
+        const dueCount = Math.floor((snapshot.now - scheduleState.lastRunAt) / schedule.everyMs);
+        if (dueCount >= 1) {
+          const scheduledAt = scheduleState.lastRunAt + dueCount * schedule.everyMs;
+          runSchedule(schedule, key, scheduleState, snapshot, generation, createScheduleContext(schedule, key, scheduledAt, snapshot.now, dueCount - 1));
         }
       });
 
@@ -210,7 +219,7 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
     schedules.forEach((schedule, index) => {
       const key = schedule.id ?? String(index);
       const scheduleState = schedulesRef.current.get(key);
-      const lastRunAt = scheduleState?.lastRunAt ?? state.startedAt ?? clock.wallNow;
+      const lastRunAt = scheduleState?.lastRunAt ?? clock.wallNow;
       nextDelay = Math.min(nextDelay, Math.max(1, lastRunAt + schedule.everyMs - clock.wallNow));
     });
 
@@ -341,4 +350,21 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
 
 function validateSchedules(schedules: TimerSchedule[] | undefined): void {
   schedules?.forEach(schedule => validatePositiveFinite(schedule.everyMs, 'schedule.everyMs'));
+}
+
+function createScheduleContext(
+  schedule: TimerSchedule,
+  key: string,
+  scheduledAt: number,
+  firedAt: number,
+  overdueCount: number,
+): TimerScheduleContext {
+  return {
+    scheduleId: schedule.id ?? key,
+    scheduledAt,
+    firedAt,
+    nextRunAt: scheduledAt + schedule.everyMs,
+    overdueCount,
+    effectiveEveryMs: schedule.everyMs,
+  };
 }

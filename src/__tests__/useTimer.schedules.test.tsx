@@ -132,4 +132,89 @@ describe('useTimer schedules', () => {
 
     expect(callback).toHaveBeenCalledTimes(1);
   });
+
+  it('passes schedule timing context to callbacks', async () => {
+    const callback = vi.fn();
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        schedules: [{ id: 'poll', everyMs: 100, callback }],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ now: 100 }),
+      expect.objectContaining({ cancel: expect.any(Function) }),
+      {
+        scheduleId: 'poll',
+        scheduledAt: 100,
+        firedAt: 100,
+        nextRunAt: 200,
+        overdueCount: 0,
+        effectiveEveryMs: 100,
+      },
+    );
+  });
+
+  it('reports overdue intervals when a scheduled timeout fires late', async () => {
+    const callback = vi.fn();
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 1000,
+        schedules: [{ id: 'poll', everyMs: 100, leading: true, callback }],
+      }),
+    );
+
+    await act(async () => {});
+    callback.mockClear();
+
+    act(() => vi.setSystemTime(350));
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ now: 450 }),
+      expect.anything(),
+      {
+        scheduleId: 'poll',
+        scheduledAt: 400,
+        firedAt: 450,
+        nextRunAt: 500,
+        overdueCount: 3,
+        effectiveEveryMs: 100,
+      },
+    );
+  });
+
+  it('emits schedule timing context in debug logs', async () => {
+    const logger = vi.fn();
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        debug: { logger },
+        schedules: [{ id: 'poll', everyMs: 100, callback: vi.fn() }],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(logger).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'schedule:start',
+        scheduleId: 'poll',
+        scheduledAt: 100,
+        firedAt: 100,
+        nextRunAt: 200,
+        overdueCount: 0,
+        effectiveEveryMs: 100,
+      }),
+    );
+  });
 });

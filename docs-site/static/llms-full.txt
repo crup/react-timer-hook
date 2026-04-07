@@ -36,6 +36,8 @@ Use `useTimerGroup()` for many keyed timers that each need independent lifecycle
 
 Schedules are app-owned side effects. Default overlap behavior is `skip`.
 
+Schedule callbacks receive `(snapshot, controls, context)`. `context` includes `scheduleId`, `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`.
+
 ## Recipes index
 
 Basic:

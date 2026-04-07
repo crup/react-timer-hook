@@ -18,5 +18,6 @@ Core rules:
 - Use endWhen(snapshot) to end a lifecycle.
 - Use cancel(reason) for terminal early stops.
 - Schedules run while active and default to overlap: 'skip'.
+- Schedule callbacks receive context with scheduledAt, firedAt, nextRunAt, overdueCount, and effectiveEveryMs.
 - Debug logs are opt-in only.
 - Formatting, locale, timezone, caching, retries, and business rules are userland.

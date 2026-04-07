@@ -38,12 +38,21 @@ export type TimerControls = {
 
 export type TimerEndPredicate = (snapshot: TimerSnapshot) => boolean;
 
+export type TimerScheduleContext = {
+  scheduleId: string;
+  scheduledAt: number;
+  firedAt: number;
+  nextRunAt: number;
+  overdueCount: number;
+  effectiveEveryMs: number;
+};
+
 export type TimerSchedule = {
   id?: string;
   everyMs: number;
   leading?: boolean;
   overlap?: 'skip' | 'allow';
-  callback: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
+  callback: (snapshot: TimerSnapshot, controls: TimerControls, context: TimerScheduleContext) => void | Promise<void>;
 };
 
 export type TimerDebug =
@@ -86,6 +95,11 @@ export type TimerDebugEvent = {
   status: TimerStatus;
   reason?: string;
   error?: unknown;
+  scheduledAt?: number;
+  firedAt?: number;
+  nextRunAt?: number;
+  overdueCount?: number;
+  effectiveEveryMs?: number;
 };
 
 export type UseTimerOptions = {
