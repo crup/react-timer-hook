@@ -49,7 +49,7 @@
     "ai:context": "node scripts/ai-context.mjs",
     "build": "tsup",
     "changeset": "changeset",
-    "docs:build": "NO_UPDATE_NOTIFIER=1 docusaurus build docs-site",
+    "docs:build": "node scripts/build-docs.mjs",
     "docs:dev": "NO_UPDATE_NOTIFIER=1 docusaurus start docs-site",
     "docs:preview": "NO_UPDATE_NOTIFIER=1 docusaurus serve docs-site/build",
     "mcp:docs": "node mcp/server.mjs",
