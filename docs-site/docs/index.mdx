@@ -1,5 +1,5 @@
 ---
-title: Deterministic React timers
+title: Reliable React timers
 slug: /
 description: React timer primitives for countdowns, stopwatches, clocks, polling schedules, and many independent timer lifecycles.
 ---
@@ -7,11 +7,11 @@ description: React timer primitives for countdowns, stopwatches, clocks, polling
 import RecipePlayground from '@site/src/components/RecipePlayground';
 import { StopwatchSample, AbsoluteCountdownSample, TimerGroupSample } from '../samples/recipes';
 
-# Deterministic React timers
+# Reliable React timers
 
 `@crup/react-timer-hook` gives React apps a small timer lifecycle primitive instead of a formatting-heavy timer component.
 
-It is built for rerenders, Strict Mode, async callbacks, cleanup, and lists of timers.
+It is built for Strict Mode, rerenders, async callbacks, cleanup, and pages with many independent timers.
 
 ```sh
 npm install @crup/react-timer-hook@alpha
@@ -39,3 +39,11 @@ pnpm add @crup/react-timer-hook@alpha
 - `durationParts()` for duration display math
 
 The library owns scheduling and cleanup. Your app owns formatting, timezone, data fetching policy, and business rules.
+
+## Recipe routes
+
+- [Wall clock](./recipes/basic/wall-clock)
+- [Stopwatch](./recipes/basic/stopwatch)
+- [Auction countdown](./recipes/basic/absolute-countdown)
+- [Polling schedule](./recipes/intermediate/polling-schedule)
+- [Timer group](./recipes/advanced/timer-group)

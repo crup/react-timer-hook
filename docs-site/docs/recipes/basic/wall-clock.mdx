@@ -1,0 +1,21 @@
+---
+title: Wall clock
+description: Render local wall-clock time from timer.now.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { WallClockSample } from '../../../samples/recipes';
+
+# Wall clock
+
+Use `timer.now` for clock displays and keep formatting in your app.
+
+<RecipePlayground title="Wall clock">
+  <WallClockSample />
+</RecipePlayground>
+
+```tsx
+const timer = useTimer({ autoStart: true, updateIntervalMs: 1000 });
+const label = new Date(timer.now).toLocaleTimeString();
+```
+

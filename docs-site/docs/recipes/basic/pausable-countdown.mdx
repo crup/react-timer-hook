@@ -1,0 +1,25 @@
+---
+title: Pausable countdown
+description: Count down a fixed active duration that pauses and resumes cleanly.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { PausableCountdownSample } from '../../../samples/recipes';
+
+# Pausable countdown
+
+Use `elapsedMilliseconds` for duration countdowns that must pause and resume.
+
+<RecipePlayground title="Pausable duration countdown">
+  <PausableCountdownSample />
+</RecipePlayground>
+
+```tsx
+const timer = useTimer({
+  autoStart: true,
+  endWhen: snapshot => snapshot.elapsedMilliseconds >= durationMs,
+});
+
+const remainingMs = Math.max(0, durationMs - timer.elapsedMilliseconds);
+```
+

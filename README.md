@@ -1,6 +1,6 @@
 # @crup/react-timer-hook
 
-> Deterministic React timer primitives for countdowns, stopwatches, clocks, schedules, and many independent timers.
+> Reliable React timer hooks for countdowns, stopwatches, clocks, polling schedules, and many independent timer lifecycles.
 
 [![npm alpha](https://img.shields.io/npm/v/%40crup%2Freact-timer-hook/alpha?label=npm%20alpha&color=00b894)](https://www.npmjs.com/package/@crup/react-timer-hook?activeTab=versions)
 [![npm downloads](https://img.shields.io/npm/dm/%40crup%2Freact-timer-hook?color=0f766e)](https://www.npmjs.com/package/@crup/react-timer-hook)
@@ -8,43 +8,44 @@
 [![Docs](https://github.com/crup/react-timer-hook/actions/workflows/docs.yml/badge.svg)](https://github.com/crup/react-timer-hook/actions/workflows/docs.yml)
 [![Size](https://github.com/crup/react-timer-hook/actions/workflows/size.yml/badge.svg)](https://github.com/crup/react-timer-hook/actions/workflows/size.yml)
 [![license](https://img.shields.io/npm/l/%40crup%2Freact-timer-hook?color=111827)](./LICENSE)
-[![types](https://img.shields.io/npm/types/%40crup%2Freact-timer-hook?color=2563eb)](./dist/index.d.ts)
+[![types](https://img.shields.io/npm/types/%40crup%2Freact-timer-hook?color=2563eb)](https://www.npmjs.com/package/@crup/react-timer-hook)
+[![React](https://img.shields.io/npm/dependency-version/%40crup%2Freact-timer-hook/peer/react?label=react&color=149eca)](https://react.dev/)
 
-📚 Docs: https://crup.github.io/react-timer-hook/
+📚 Docs and live examples: https://crup.github.io/react-timer-hook/
 
-## Docs and live examples
+## Why this exists
 
-The documentation site is built with Docusaurus and includes live React playgrounds for 15 recipes:
+Timer hooks look simple until real apps need pause/resume semantics, Strict Mode cleanup, async callbacks, polling that does not overlap, and lists with dozens of independent timers.
 
-- Basic: clock, stopwatch, absolute countdown, pausable countdown, manual controls
-- Intermediate: once-only `onEnd`, polling, poll-and-cancel, backend events, debug logs
-- Advanced: many display timers, timer groups, global controls, per-item polling, dynamic items
+`@crup/react-timer-hook` keeps the API small and lets your app decide what time means:
 
-Open: https://crup.github.io/react-timer-hook/
-
-## Why it is different
-
-Most timer libraries mix scheduling, lifecycle, formatting, and app behavior. This package keeps the core small:
-
-- ⏱️ `useTimer()` for one lifecycle.
+- ⏱️ `useTimer()` for one lifecycle: stopwatch, countdown, clock, schedule, or custom flow.
 - 🧭 `useTimerGroup()` for many keyed lifecycles with one shared scheduler.
-- 🧩 `durationParts()` for display-friendly duration math.
-- 🧼 No timezone, locale, or formatting opinions.
-- 🧪 Built around React Strict Mode, rerenders, async callbacks, and cleanup.
-- 🤖 AI-friendly docs via `llms.txt`, `llms-full.txt`, and a tiny local MCP docs utility.
+- 🧩 `durationParts()` for display math without locale or timezone opinions.
+- 🧼 No formatting, timezone, audio, retry, cache, or data-fetching policy baked in.
+- 🧪 Built for rerenders, Strict Mode, async callbacks, cleanup, and many timers.
+- 🤖 Agent-friendly docs through hosted `llms.txt`, `llms-full.txt`, and an optional MCP docs helper.
 
 ## Install
 
-Alpha is the only intended release channel until stable publishing is explicitly unlocked.
+The project is currently in alpha while the API receives feedback.
 
 ```sh
 npm install @crup/react-timer-hook@alpha
 pnpm add @crup/react-timer-hook@alpha
 ```
 
-```ts
+```tsx
 import { durationParts, useTimer, useTimerGroup } from '@crup/react-timer-hook';
 ```
+
+## Live recipes
+
+Each recipe has a live playground and a focused code sample:
+
+- Basic: [wall clock](https://crup.github.io/react-timer-hook/recipes/basic/wall-clock/), [stopwatch](https://crup.github.io/react-timer-hook/recipes/basic/stopwatch/), [absolute countdown](https://crup.github.io/react-timer-hook/recipes/basic/absolute-countdown/), [pausable countdown](https://crup.github.io/react-timer-hook/recipes/basic/pausable-countdown/), [manual controls](https://crup.github.io/react-timer-hook/recipes/basic/manual-controls/)
+- Intermediate: [once-only onEnd](https://crup.github.io/react-timer-hook/recipes/intermediate/once-only-on-end/), [polling schedule](https://crup.github.io/react-timer-hook/recipes/intermediate/polling-schedule/), [poll and cancel](https://crup.github.io/react-timer-hook/recipes/intermediate/poll-and-cancel/), [backend event stop](https://crup.github.io/react-timer-hook/recipes/intermediate/backend-event-stop/), [debug logs](https://crup.github.io/react-timer-hook/recipes/intermediate/debug-logs/)
+- Advanced: [many display countdowns](https://crup.github.io/react-timer-hook/recipes/advanced/many-display-countdowns/), [timer group](https://crup.github.io/react-timer-hook/recipes/advanced/timer-group/), [group controls](https://crup.github.io/react-timer-hook/recipes/advanced/group-controls/), [per-item polling](https://crup.github.io/react-timer-hook/recipes/advanced/per-item-polling/), [dynamic items](https://crup.github.io/react-timer-hook/recipes/advanced/dynamic-items/)
 
 ## Quick examples
 
@@ -58,17 +59,17 @@ export function Stopwatch() {
 
   return (
     <>
-      <output>{Math.floor(timer.elapsedMilliseconds / 1000)}s</output>
-      <button onClick={timer.start}>Start</button>
-      <button onClick={timer.pause}>Pause</button>
-      <button onClick={timer.resume}>Resume</button>
+      <output>{(timer.elapsedMilliseconds / 1000).toFixed(1)}s</output>
+      <button disabled={!timer.isIdle} onClick={timer.start}>Start</button>
+      <button disabled={!timer.isRunning} onClick={timer.pause}>Pause</button>
+      <button disabled={!timer.isPaused} onClick={timer.resume}>Resume</button>
       <button onClick={timer.restart}>Restart</button>
     </>
   );
 }
 ```
 
-### Absolute countdown
+### Auction countdown
 
 Use `now` for wall-clock deadlines from a server, auction, reservation, or job expiry.
 
@@ -93,7 +94,7 @@ export function AuctionTimer({ auctionId, expiresAt }: {
 }
 ```
 
-### Polling with early cancel
+### Poll and cancel early
 
 Schedules run while the timer is active. Slow async work is skipped by default with `overlap: 'skip'`.
 
@@ -134,7 +135,7 @@ const timers = useTimerGroup({
 
 ## Bundle size
 
-Current local build:
+Current build:
 
 | File | Raw | Gzip | Brotli |
 | --- | ---: | ---: | ---: |
@@ -142,21 +143,16 @@ Current local build:
 | `dist/index.cjs` | 12.94 kB | 3.79 kB | 3.42 kB |
 | `dist/index.d.ts` | 3.95 kB | 992 B | 888 B |
 
-CI writes a size summary to the GitHub Actions UI and posts a bundle-size comment on pull requests.
+CI writes a size summary to the GitHub Actions UI and posts bundle-size reports on pull requests.
 
-## AI-friendly
+## AI-friendly docs
 
-End users do not need these files. They are for coding agents, docs-aware IDEs, and MCP clients.
+Agents and docs-aware IDEs can use:
 
-### MCP setup
+- https://crup.github.io/react-timer-hook/llms.txt
+- https://crup.github.io/react-timer-hook/llms-full.txt
 
-Clone the repo, install dependencies, and point your MCP client at the local stdio server:
-
-```sh
-git clone https://github.com/crup/react-timer-hook.git
-cd react-timer-hook
-pnpm install
-```
+Optional local MCP docs server:
 
 ```json
 {
@@ -169,7 +165,7 @@ pnpm install
 }
 ```
 
-The MCP server exposes:
+It exposes:
 
 ```txt
 react-timer-hook://package
@@ -177,29 +173,12 @@ react-timer-hook://api
 react-timer-hook://recipes
 ```
 
-Agents can use hosted context:
+## Contributing
 
-- https://crup.github.io/react-timer-hook/llms.txt
-- https://crup.github.io/react-timer-hook/llms-full.txt
+Issues, recipes, docs improvements, and focused bug reports are welcome.
 
-Local MCP/docs helpers:
+- Read the docs: https://crup.github.io/react-timer-hook/
+- Open an issue: https://github.com/crup/react-timer-hook/issues
+- See the contributing guide: ./CONTRIBUTING.md
 
-```sh
-pnpm ai:context
-pnpm mcp:docs
-```
-
-The MCP utility is repo-local and excluded from the published npm package.
-
-## Release policy
-
-- Published versions must stay `0.0.1-alpha.x` until stable release is explicitly unlocked.
-- `@alpha` is the documented install tag right now.
-- Npm requires a `latest` dist-tag, so the workflow keeps `latest` pointing at the current alpha until stable publishing is unlocked.
-
-## Links
-
-- 📚 Docs: https://crup.github.io/react-timer-hook/
-- 📦 npm: https://www.npmjs.com/package/@crup/react-timer-hook
-- 🧵 Issues: https://github.com/crup/react-timer-hook/issues
-- 🤝 Contributing: ./CONTRIBUTING.md
+The package targets Node 24 for development and React 18+ as a peer dependency.

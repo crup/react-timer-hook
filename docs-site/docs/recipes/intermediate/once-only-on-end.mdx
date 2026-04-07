@@ -1,0 +1,24 @@
+---
+title: Once-only onEnd
+description: Run an end callback exactly once per timer generation.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { OnEndSample } from '../../../samples/recipes';
+
+# Once-only onEnd
+
+`onEnd` fires once per generation. `restart()` creates a new generation and allows it to fire again.
+
+<RecipePlayground title="Once-only onEnd">
+  <OnEndSample />
+</RecipePlayground>
+
+```tsx
+useTimer({
+  autoStart: true,
+  endWhen: snapshot => snapshot.elapsedMilliseconds >= 5000,
+  onEnd: () => api.markDone(),
+});
+```
+

@@ -1,0 +1,21 @@
+---
+title: Stopwatch
+description: Track active elapsed duration with start, pause, resume, restart, and reset.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { StopwatchSample } from '../../../samples/recipes';
+
+# Stopwatch
+
+Use `elapsedMilliseconds` for active elapsed time. It is independent from clock formatting.
+
+<RecipePlayground title="Stopwatch">
+  <StopwatchSample />
+</RecipePlayground>
+
+```tsx
+const timer = useTimer({ updateIntervalMs: 100 });
+const seconds = Math.floor(timer.elapsedMilliseconds / 1000);
+```
+

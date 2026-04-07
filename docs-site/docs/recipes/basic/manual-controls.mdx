@@ -1,0 +1,25 @@
+---
+title: Manual controls
+description: Drive the timer lifecycle from explicit UI actions.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { ManualTimerSample } from '../../../samples/recipes';
+
+# Manual controls
+
+Use the returned controls directly in your UI. Each action is idempotent for its invalid state.
+
+<RecipePlayground title="Manual timer">
+  <ManualTimerSample />
+</RecipePlayground>
+
+```tsx
+timer.start();
+timer.pause();
+timer.resume();
+timer.restart();
+timer.reset();
+timer.cancel('manual-cancel');
+```
+

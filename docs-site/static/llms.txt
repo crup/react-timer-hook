@@ -1,6 +1,6 @@
 # @crup/react-timer-hook
 
-Deterministic React timer lifecycle hooks for timers, schedules, and many independent timers.
+Reliable React timer lifecycle hooks for timers, schedules, and many independent timers.
 
 Docs: https://crup.github.io/react-timer-hook/
 Package: @crup/react-timer-hook
@@ -8,7 +8,7 @@ Install alpha: npm install @crup/react-timer-hook@alpha
 Repository: https://github.com/crup/react-timer-hook
 
 Public exports:
-- useTimer(options): one deterministic timer lifecycle.
+- useTimer(options): one reliable timer lifecycle.
 - useTimerGroup(options): many keyed independent lifecycles with one shared scheduler.
 - durationParts(milliseconds): duration display helper.
 

@@ -1,0 +1,22 @@
+---
+title: Group controls
+description: Pause, resume, and restart a whole timer group.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { GroupControlsSample } from '../../../samples/recipes';
+
+# Group controls
+
+Group-level controls are useful for dashboards, task boards, and global page actions.
+
+<RecipePlayground title="Group controls">
+  <GroupControlsSample />
+</RecipePlayground>
+
+```tsx
+timers.pauseAll();
+timers.resumeAll();
+timers.restartAll();
+```
+

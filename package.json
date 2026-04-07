@@ -1,7 +1,7 @@
 {
   "name": "@crup/react-timer-hook",
   "version": "0.0.0",
-  "description": "Deterministic React timer lifecycle hooks for timers, schedules, and many independent timers.",
+  "description": "Reliable React timer lifecycle hooks for countdowns, stopwatches, schedules, and many independent timers.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

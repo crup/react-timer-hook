@@ -1,0 +1,25 @@
+---
+title: Absolute countdown
+description: Count down to a server or wall-clock deadline.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { AbsoluteCountdownSample } from '../../../samples/recipes';
+
+# Absolute countdown
+
+Use `timer.now` for server deadlines, auctions, reservations, job expiries, and other wall-clock timestamps.
+
+<RecipePlayground title="Absolute deadline countdown">
+  <AbsoluteCountdownSample />
+</RecipePlayground>
+
+```tsx
+const timer = useTimer({
+  autoStart: true,
+  endWhen: snapshot => snapshot.now >= expiresAt,
+});
+
+const remainingMs = Math.max(0, expiresAt - timer.now);
+```
+

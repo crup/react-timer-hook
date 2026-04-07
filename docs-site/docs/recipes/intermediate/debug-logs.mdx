@@ -1,0 +1,24 @@
+---
+title: Debug logs
+description: Opt into semantic lifecycle and schedule events.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { DebugLogsSample } from '../../../samples/recipes';
+
+# Debug logs
+
+Debug logs are opt-in and semantic. They do not expose timeout handles.
+
+<RecipePlayground title="Debug logs">
+  <DebugLogsSample />
+</RecipePlayground>
+
+```tsx
+debug: {
+  label: 'auction-card',
+  includeTicks: false,
+  logger: event => console.debug('[timer]', event),
+}
+```
+

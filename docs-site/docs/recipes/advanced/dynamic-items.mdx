@@ -1,0 +1,21 @@
+---
+title: Dynamic items
+description: Add and remove timer group items at runtime.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { DynamicItemsSample } from '../../../samples/recipes';
+
+# Dynamic items
+
+Use group methods when timer IDs are not known at render time.
+
+<RecipePlayground title="Dynamic timer items">
+  <DynamicItemsSample />
+</RecipePlayground>
+
+```tsx
+timers.add({ id, autoStart: true });
+timers.remove(id);
+timers.clear();
+```

@@ -1,0 +1,23 @@
+---
+title: Poll and cancel
+description: Poll a backend and cancel the timer before natural end.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { PollAndCancelSample } from '../../../samples/recipes';
+
+# Poll and cancel
+
+Use `cancel(reason)` for terminal early stops that should not call `onEnd`.
+
+<RecipePlayground title="Poll and cancel">
+  <PollAndCancelSample />
+</RecipePlayground>
+
+```tsx
+callback: async (_snapshot, controls) => {
+  const auction = await api.getAuction(auctionId);
+  if (auction.status === 'sold') controls.cancel('sold');
+}
+```
+

@@ -39,25 +39,25 @@ Schedules are app-owned side effects. Default overlap behavior is `skip`.
 ## Recipes index
 
 Basic:
-- Wall-clock display: `new Date(timer.now)`.
-- Stopwatch: render `timer.elapsedMilliseconds`.
-- Absolute deadline countdown: `Math.max(0, expiresAt - timer.now)`.
-- Pausable duration countdown: `durationMs - timer.elapsedMilliseconds`.
-- Manual timer: use `start`, `restart`, and `reset`.
+- `/recipes/basic/wall-clock/`: `new Date(timer.now)`.
+- `/recipes/basic/stopwatch/`: render `timer.elapsedMilliseconds`.
+- `/recipes/basic/absolute-countdown/`: `Math.max(0, expiresAt - timer.now)`.
+- `/recipes/basic/pausable-countdown/`: `durationMs - timer.elapsedMilliseconds`.
+- `/recipes/basic/manual-controls/`: use `start`, `restart`, and `reset`.
 
 Intermediate:
-- Once-only end action: `onEnd`.
-- Poll while active: `schedules`.
-- Poll and cancel early: call `controls.cancel(reason)`.
-- Backend event stop: call `timer.cancel(reason)` from a subscription.
-- Debug logs: opt in with `debug.logger`.
+- `/recipes/intermediate/once-only-on-end/`: `onEnd`.
+- `/recipes/intermediate/polling-schedule/`: `schedules`.
+- `/recipes/intermediate/poll-and-cancel/`: call `controls.cancel(reason)`.
+- `/recipes/intermediate/backend-event-stop/`: call `timer.cancel(reason)` from a subscription.
+- `/recipes/intermediate/debug-logs/`: opt in with `debug.logger`.
 
 Advanced:
-- Many display-only countdowns: one shared `useTimer`.
-- Many independent timers: `useTimerGroup`.
-- Group pause/resume: `pauseAll` and `resumeAll`.
-- Per-item polling: item `schedules`.
-- Dynamic item lifecycle: `add`, `update`, `remove`.
+- `/recipes/advanced/many-display-countdowns/`: one shared `useTimer`.
+- `/recipes/advanced/timer-group/`: `useTimerGroup`.
+- `/recipes/advanced/group-controls/`: `pauseAll` and `resumeAll`.
+- `/recipes/advanced/per-item-polling/`: item `schedules`.
+- `/recipes/advanced/dynamic-items/`: `add`, `update`, `remove`.
 
 ## MCP
 

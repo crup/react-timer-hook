@@ -1,0 +1,24 @@
+---
+title: Per-item polling
+description: Give each group item its own schedule.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { PerItemPollingSample } from '../../../samples/recipes';
+
+# Per-item polling
+
+Each item can define schedules with different cadence and callbacks.
+
+<RecipePlayground title="Per-item polling">
+  <PerItemPollingSample />
+</RecipePlayground>
+
+```tsx
+items: jobs.map(job => ({
+  id: job.id,
+  autoStart: true,
+  schedules: [{ id: 'status', everyMs: job.pollMs, callback: refresh }],
+}))
+```
+

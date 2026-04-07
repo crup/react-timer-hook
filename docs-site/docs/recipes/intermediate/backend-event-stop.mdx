@@ -1,0 +1,24 @@
+---
+title: Backend event stop
+description: Stop a timer from a WebSocket, SSE, or subscription event.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { BackendEventSample } from '../../../samples/recipes';
+
+# Backend event stop
+
+External events can call `cancel(reason)` without involving timer schedules.
+
+<RecipePlayground title="Backend event stop">
+  <BackendEventSample />
+</RecipePlayground>
+
+```tsx
+useEffect(() => {
+  return subscribeToAuction(auctionId, event => {
+    if (event.type === 'auction:sold') timer.cancel('sold');
+  });
+}, [auctionId, timer.cancel]);
+```
+

@@ -1,0 +1,21 @@
+---
+title: Many display countdowns
+description: Drive many display-only rows from one shared timer.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { ManyDisplayCountdownsSample } from '../../../samples/recipes';
+
+# Many display countdowns
+
+Use one shared `useTimer()` when rows only need countdown labels.
+
+<RecipePlayground title="Many display-only countdowns">
+  <ManyDisplayCountdownsSample />
+</RecipePlayground>
+
+```tsx
+const clock = useTimer({ autoStart: true, updateIntervalMs: 1000 });
+const remainingMs = Math.max(0, item.expiresAt - clock.now);
+```
+

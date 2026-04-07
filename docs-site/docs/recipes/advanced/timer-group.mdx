@@ -1,0 +1,26 @@
+---
+title: Timer group
+description: Manage many independent timer lifecycles with one scheduler.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { TimerGroupSample } from '../../../samples/recipes';
+
+# Timer group
+
+Use `useTimerGroup()` when every row needs its own pause, resume, restart, cancel, schedules, or `onEnd`.
+
+<RecipePlayground title="Timer group">
+  <TimerGroupSample />
+</RecipePlayground>
+
+```tsx
+const timers = useTimerGroup({
+  items: jobs.map(job => ({
+    id: job.id,
+    autoStart: true,
+    endWhen: snapshot => snapshot.elapsedMilliseconds >= job.timeoutMs,
+  })),
+});
+```
+
