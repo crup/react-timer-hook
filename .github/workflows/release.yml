@@ -1,5 +1,5 @@
 name: Release
-run-name: Release ${{ inputs.version_bump }} to npm latest
+run-name: Stable release to npm latest
 
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ on:
       stable_version:
         description: Manual stable version, used only when version_bump is manual.
         required: false
-        default: ''
+        default: 0.0.1
 
 permissions:
   contents: write
@@ -133,7 +133,7 @@ NODE
           } >> "$GITHUB_STEP_SUMMARY"
 
   verify:
-    name: 2. Verify Release ${{ needs.guard.outputs.stable_version }}
+    name: 2. Verify release
     needs: guard
     runs-on: ubuntu-latest
     steps:
@@ -204,7 +204,7 @@ NODE
           } >> "$GITHUB_STEP_SUMMARY"
 
   publish:
-    name: 3. Publish Release ${{ needs.guard.outputs.stable_version }} to npm latest
+    name: 3. Publish npm latest
     needs: [guard, verify]
     runs-on: ubuntu-latest
     outputs:
@@ -257,7 +257,7 @@ NODE
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   github-release:
-    name: 4. Create GitHub Release ${{ needs.guard.outputs.stable_version }}
+    name: 4. Create GitHub release
     needs: [guard, publish]
     runs-on: ubuntu-latest
     steps:
