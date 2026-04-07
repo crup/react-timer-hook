@@ -2,6 +2,14 @@
   "name": "@crup/react-timer-hook",
   "version": "0.0.0",
   "description": "A lightweight React hooks library for building timers, stopwatches, and real-time clocks with minimal boilerplate.",
+  "homepage": "https://crup.github.io/react-timer-hook/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/crup/react-timer-hook.git"
+  },
+  "bugs": {
+    "url": "https://github.com/crup/react-timer-hook/issues"
+  },
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -65,11 +73,25 @@
   "keywords": [
     "react",
     "hook",
+    "hooks",
     "timer",
+    "react-timer",
+    "react-timer-hook",
+    "timer-hook",
     "stopwatch",
+    "react-stopwatch",
+    "stopwatch-hook",
     "time",
     "countdown",
+    "countdown-timer",
+    "react-countdown",
+    "clock",
+    "real-time",
     "scheduler",
+    "polling",
+    "duration",
+    "timer-group",
+    "typescript",
     "react-hooks"
   ],
   "author": "Rajender Joshi <connect@rajender.pro>",
