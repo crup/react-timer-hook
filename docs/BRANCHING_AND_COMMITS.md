@@ -44,8 +44,8 @@ Example versions:
 Install test builds with:
 
 ```sh
-npm install react-timer-hook@alpha
-pnpm add react-timer-hook@alpha
+npm install @crup/react-timer-hook@alpha
+pnpm add @crup/react-timer-hook@alpha
 ```
 
 ## Local Changesets Prerelease Flow

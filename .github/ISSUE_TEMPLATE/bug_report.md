@@ -26,7 +26,7 @@ Link a reproduction or paste the smallest possible code sample.
 
 ## Environment
 
-- `react-timer-hook` version:
+- `@crup/react-timer-hook` version:
 - React version:
 - React Strict Mode enabled: yes/no
 - Browser or runtime:

@@ -50,7 +50,11 @@ jobs:
           pnpm test
 
       - name: Set prerelease version
-        run: pnpm version "${{ inputs.version_base }}-${{ inputs.tag }}.${{ github.run_number }}" --no-git-tag-version
+        env:
+          PACKAGE_VERSION: ${{ inputs.version_base }}-${{ inputs.tag }}.${{ github.run_number }}
+        run: |
+          node -e "const fs = require('node:fs'); const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8')); pkg.version = process.env.PACKAGE_VERSION; fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');"
+          node -e "const pkg = require('./package.json'); console.log(`${pkg.name}@${pkg.version}`);"
 
       - name: Build package
         run: |

@@ -180,7 +180,7 @@ For the first installable test versions, publish:
 Consumers test with:
 
 ```sh
-npm install react-timer-hook@alpha
+npm install @crup/react-timer-hook@alpha
 ```
 
 Keep prerelease publishing manual at first with `workflow_dispatch`, so every push to `next` does not automatically publish to npm.

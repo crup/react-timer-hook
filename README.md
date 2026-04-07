@@ -1,4 +1,4 @@
-# react-timer-hook
+# @crup/react-timer-hook
 
 A small React hook library for deterministic timer lifecycles.
 
@@ -6,12 +6,19 @@ This package is planned as a replacement for the previous `react-timer-hook` API
 
 ## Status
 
-Planning and implementation spec stage. Hook implementation is not present yet.
+Alpha-ready v1 implementation. The package is intended to be published under the `@crup` npm scope.
+
+## Install
+
+```sh
+pnpm add @crup/react-timer-hook
+npm install @crup/react-timer-hook
+```
 
 ## Planned Public API
 
 ```ts
-import { useTimer, useTimerGroup, durationParts } from 'react-timer-hook';
+import { useTimer, useTimerGroup, durationParts } from '@crup/react-timer-hook';
 ```
 
 V1 should expose only:
