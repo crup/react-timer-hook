@@ -2,7 +2,7 @@
 
 > A lightweight React hooks library for building timers, stopwatches, and real-time clocks with minimal boilerplate.
 
-[![npm alpha](https://img.shields.io/npm/v/%40crup%2Freact-timer-hook/alpha?label=npm%20alpha&color=00b894)](https://www.npmjs.com/package/@crup/react-timer-hook?activeTab=versions)
+[![npm](https://img.shields.io/npm/v/%40crup%2Freact-timer-hook?label=npm&color=00b894)](https://www.npmjs.com/package/@crup/react-timer-hook)
 [![npm downloads](https://img.shields.io/npm/dm/%40crup%2Freact-timer-hook?color=0f766e)](https://www.npmjs.com/package/@crup/react-timer-hook)
 [![CI](https://github.com/crup/react-timer-hook/actions/workflows/ci.yml/badge.svg)](https://github.com/crup/react-timer-hook/actions/workflows/ci.yml)
 [![Docs](https://github.com/crup/react-timer-hook/actions/workflows/docs.yml/badge.svg)](https://github.com/crup/react-timer-hook/actions/workflows/docs.yml)
@@ -29,11 +29,9 @@ Timers get messy when a product needs pause and resume, countdowns tied to serve
 
 ## Install
 
-The project is currently in alpha while the API receives feedback.
-
 ```sh
-npm install @crup/react-timer-hook@alpha
-pnpm add @crup/react-timer-hook@alpha
+npm install @crup/react-timer-hook@latest
+pnpm add @crup/react-timer-hook@latest
 ```
 
 Runtime requirements: Node 18+ and React 18+.

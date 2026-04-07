@@ -4,7 +4,7 @@ A lightweight React hooks library for building timers, stopwatches, and real-tim
 
 Docs: https://crup.github.io/react-timer-hook/
 Package: @crup/react-timer-hook
-Install alpha: npm install @crup/react-timer-hook@alpha
+Install: npm install @crup/react-timer-hook@latest
 Runtime: Node 18+ and React 18+
 Repository: https://github.com/crup/react-timer-hook
 

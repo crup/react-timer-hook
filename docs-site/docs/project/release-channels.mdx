@@ -1,44 +1,61 @@
 ---
 title: Release channels
-description: Alpha and stable release pipeline policy.
+description: Stable and prerelease pipeline policy.
 ---
 
 # Release channels
 
-The package publishes alpha builds from `next` and stable builds from `main`.
+The public install path uses npm `latest`.
 
 ```sh
-npm install @crup/react-timer-hook@alpha
+npm install @crup/react-timer-hook@latest
 ```
 
-- `Prerelease` publishes an `0.0.1-alpha.x` version from `next`.
-- `Prerelease` updates the `alpha` dist-tag.
-- Npm requires a `latest` dist-tag, so the workflow keeps `latest` pointing at the current alpha until stable publishing is unlocked.
-- `Release` only runs from `main`.
-- `Release` is manually gated and requires `confirm_stable_release=publish-stable`.
-- The first stable version should be `0.0.1` to match the existing `0.0.1-alpha.x` prerelease line.
+Stable releases are cut from `main`. Prerelease builds can still be published from `next` for testing, but the docs and README should point users at `latest` once stable publishing is enabled.
 
 ## Stable release stages
 
-The stable release workflow is intentionally split into visible jobs:
+The `Release` workflow is intentionally split into visible jobs:
 
 | Stage | What it gates |
 | --- | --- |
-| Release guard | Confirms the workflow is running on `main`, the stable confirmation was typed, and the version is stable semver. |
+| Plan release | Confirms the workflow is running on `main`, validates the publish gate, and resolves the release version. |
 | Verify source | Runs typecheck, tests, package build, docs build, README check, size report, and pack dry run. |
 | Publish npm latest | Sets the stable version, blocks duplicate publishes, builds the final package, and publishes to npm `latest`. |
 | Create GitHub release | Creates a `vX.Y.Z` GitHub release for the exact `main` commit. |
 
-Recommended flow:
+## Stable release inputs
+
+| Input | Type | Use |
+| --- | --- | --- |
+| `confirm_stable_release` | Dropdown | Choose `publish-stable` to unlock npm `latest`. Leave `locked` to block publishing. |
+| `version_bump` | Dropdown | Choose `patch`, `minor`, `major`, or `manual`. `patch` is the normal OSS default. |
+| `stable_version` | Text | Only used when `version_bump` is `manual`. |
+
+The first stable version resolves to `0.0.1` because the prerelease line already used the `0.0.1` base.
+
+After a stable version exists, `patch` resolves the next patch automatically. For example, if npm `latest` is `0.0.1`, the next patch release resolves to `0.0.2`.
+
+Use this rule of thumb:
+
+| Change type | Release action |
+| --- | --- |
+| Documentation, CI-only, internal chore | Usually do not publish a stable npm release. Merge to `main` only. |
+| Backward-compatible bug fix | Publish a patch release. |
+| Backward-compatible feature | Publish a minor release. |
+| Breaking API change | Publish a major release. |
+
+## Recommended flow
 
 1. Merge feature work into `next`.
-2. Test alpha from `next`.
+2. Test a prerelease from `next` when needed.
 3. Open and merge `next` into `main`.
-4. Run `Release` manually on `main` with:
+4. Run `Release` manually on `main`.
+
+For the first stable release, use:
 
 ```txt
 confirm_stable_release=publish-stable
-stable_version=0.0.1
+version_bump=patch
+stable_version=
 ```
-
-Consumers should use `@alpha` until the stable workflow has published `latest`.
