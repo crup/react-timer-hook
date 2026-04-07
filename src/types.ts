@@ -55,6 +55,7 @@ export type TimerSchedule = {
   leading?: boolean;
   overlap?: 'skip' | 'allow';
   callback: (snapshot: TimerSnapshot, controls: TimerControls, context: TimerScheduleContext) => void | Promise<void>;
+  onError?: (error: unknown, snapshot: TimerSnapshot, controls: TimerControls, context: TimerScheduleContext) => void;
 };
 
 export type TimerDiagnostics =
@@ -79,7 +80,6 @@ export type TimerDiagnosticsEvent = {
     | 'timer:end'
     | 'timer:tick'
     | 'scheduler:start'
-    | 'scheduler:stop'
     | 'schedule:start'
     | 'schedule:skip'
     | 'schedule:end'

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { readClock, validatePositiveFinite } from './clocks';
+import { guardTimerControls } from './controls';
 import { baseDebugEvent, emitDiagnostics } from './debug';
 import {
   evaluateSchedules,
   getScheduleSignature,
   getNextScheduleDelay,
   syncScheduleStates,
+  validateSchedules,
   type ScheduleEvent,
   type ScheduleState,
 } from './scheduleCore';
@@ -40,8 +42,10 @@ type InternalGroupItem = TimerItem<TimerGroupItemControls, TimerGroupItem> & {
 
 type TimerGroupStore = {
   controls: Omit<TimerGroupResult, 'now' | 'size' | 'ids' | 'get'>;
+  commitOptions(): void;
   destroy(): void;
   getSnapshot(): Pick<TimerGroupResult, 'now' | 'size' | 'ids'>;
+  getServerSnapshot(): Pick<TimerGroupResult, 'now' | 'size' | 'ids'>;
   getTimer(id: string): TimerSnapshot | undefined;
   setOptions(options: UseTimerGroupOptions): void;
   subscribe(listener: () => void): () => void;
@@ -56,11 +60,15 @@ export function useTimerGroup(options: UseTimerGroupOptions = {}): TimerGroupRes
   storeRef.current.setOptions(options);
 
   useEffect(() => {
+    storeRef.current?.commitOptions();
+  });
+
+  useEffect(() => {
     const store = storeRef.current!;
     return () => store.destroy();
   }, []);
 
-  const groupSnapshot = useSyncExternalStore(storeRef.current.subscribe, storeRef.current.getSnapshot, storeRef.current.getSnapshot);
+  const groupSnapshot = useSyncExternalStore(storeRef.current.subscribe, storeRef.current.getSnapshot, storeRef.current.getServerSnapshot);
 
   return {
     ...groupSnapshot,
@@ -75,11 +83,15 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
 
   const listeners = new Set<() => void>();
   const items = new Map<string, InternalGroupItem>();
-  let snapshot = createGroupSnapshot(items, readClock().wallNow);
+  let snapshotClock = readClock();
+  let snapshot = createGroupSnapshot(items, snapshotClock.wallNow);
+  const serverSnapshot = snapshot;
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let syncSignature = getSyncSignature(options);
+  let pendingOptionsCommit = true;
 
   const notify = (clock = readClock()) => {
+    snapshotClock = clock;
     snapshot = createGroupSnapshot(items, clock.wallNow);
     listeners.forEach(listener => listener());
   };
@@ -107,7 +119,8 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
   };
 
   const onEndError = (item: InternalGroupItem) => (error: unknown, eventSnapshot: TimerSnapshot, generation: number) => {
-    item.definition.onError?.(error, eventSnapshot, itemControls(item.id));
+    const callbackControls = guardTimerControls(itemControls(item.id), () => items.get(item.id) === item && item.state.generation === generation);
+    item.definition.onError?.(error, eventSnapshot, callbackControls);
     emitDiagnostics(options.diagnostics, {
       type: 'callback:error',
       scope: 'timer-group',
@@ -141,7 +154,8 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
   const processItem = (item: InternalGroupItem, clock = readClock(), activation = false) => {
     if (item.state.status !== 'running') return false;
 
-    const controls = itemControls(item.id);
+    const generation = item.state.generation;
+    const controls = guardTimerControls(itemControls(item.id), () => items.get(item.id) === item && item.state.generation === generation);
     const endedSnapshot = endTimerItemIfNeeded(item, clock, controls, onEndError(item));
     if (endedSnapshot) {
       emit('timer:end', item, endedSnapshot);
@@ -156,7 +170,8 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
       generation: item.state.generation,
       controls,
       activation,
-      isLive: generation => items.get(item.id)?.state.generation === generation,
+      isLive: generation => items.get(item.id) === item && item.state.generation === generation,
+      onError: (error, errorSnapshot, errorControls) => item.definition.onError?.(error, errorSnapshot, errorControls),
       onEvent: emitSchedule(item, currentSnapshot, item.state.generation),
     });
     return false;
@@ -207,10 +222,11 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
     return { item, added: true };
   };
 
-  const sync = (syncOptions: { notify?: boolean; process?: boolean; reschedule?: boolean } = {}) => {
+  const sync = (syncOptions: { notify?: boolean; process?: boolean; reschedule?: boolean; autoStart?: boolean } = {}) => {
     const notifyListeners = syncOptions.notify ?? true;
     const processLifecycle = syncOptions.process ?? true;
     const forceReschedule = syncOptions.reschedule ?? true;
+    const startAuto = syncOptions.autoStart ?? true;
     validateOptions(options);
     const liveIds = new Set<string>();
     let changed = false;
@@ -221,7 +237,7 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
         liveIds.add(definition.id);
         const { item, added } = ensureItem(definition);
         changed = changed || added;
-        if (definition.autoStart && item.state.status === 'idle') {
+        if (startAuto && definition.autoStart && item.state.status === 'idle') {
           if (startTimerState(item.state, clock)) {
             changed = true;
             if (processLifecycle) changed = processItem(item, clock, true) || changed;
@@ -242,6 +258,7 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
       if (notifyListeners) {
         notify(clock);
       } else {
+        snapshotClock = clock;
         snapshot = createGroupSnapshot(items, clock.wallNow);
       }
     }
@@ -358,7 +375,7 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
 
   const getTimer = (id: string) => {
     const item = items.get(id);
-    return item ? getTimerItemSnapshot(item, readClock()) : undefined;
+    return item ? getTimerItemSnapshot(item, snapshotClock) : undefined;
   };
 
   const controls: TimerGroupStore['controls'] = {
@@ -380,23 +397,25 @@ function createTimerGroupStore(initialOptions: UseTimerGroupOptions): TimerGroup
     cancelAll: reason => Array.from(items.keys()).forEach(id => cancel(id, reason)),
   };
 
-  sync();
+  sync({ notify: false, process: false, reschedule: false, autoStart: false });
 
   return {
+    commitOptions: () => {
+      if (!pendingOptionsCommit) return;
+      pendingOptionsCommit = false;
+      sync({ notify: true, process: true, reschedule: true, autoStart: true });
+    },
     controls,
     destroy: clearTimeoutRef,
     getSnapshot: () => snapshot,
+    getServerSnapshot: () => serverSnapshot,
     getTimer,
     setOptions: nextOptions => {
       validateOptions(nextOptions);
       const nextSignature = getSyncSignature(nextOptions);
-      const shouldReschedule = nextSignature !== syncSignature;
-      const shouldSync = nextOptions.items !== options.items || shouldReschedule;
+      pendingOptionsCommit = pendingOptionsCommit || nextOptions.items !== options.items || nextSignature !== syncSignature;
       options = nextOptions;
-      if (shouldSync) {
-        syncSignature = nextSignature;
-        sync({ notify: false, process: false, reschedule: shouldReschedule });
-      }
+      syncSignature = nextSignature;
     },
     subscribe: listener => {
       listeners.add(listener);
@@ -418,13 +437,13 @@ function seedNewSchedules(item: InternalGroupItem, now: number): void {
 }
 
 function getSyncSignature(options: UseTimerGroupOptions): string {
-  return [
+  return JSON.stringify([
     options.updateIntervalMs ?? 1000,
     ...(options.items ?? []).map(item => {
       const schedules = getScheduleSignature(item.schedules);
-      return `${item.id}:${item.autoStart ?? false}:${schedules ?? ''}`;
+      return [item.id, item.autoStart ?? false, schedules ?? ''];
     }),
-  ].join('|');
+  ]);
 }
 
 function validateOptions(options: UseTimerGroupOptions): void {
@@ -438,6 +457,6 @@ function validateItems(items: TimerGroupItem[] | undefined): void {
     if (!item.id) throw new Error('Timer item id is required');
     if (ids.has(item.id)) throw new Error(`Duplicate timer item id "${item.id}"`);
     ids.add(item.id);
-    item.schedules?.forEach(schedule => validatePositiveFinite(schedule.everyMs, 'schedule.everyMs'));
+    validateSchedules(item.schedules);
   });
 }

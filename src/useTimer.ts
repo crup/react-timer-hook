@@ -1,4 +1,5 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { guardTimerControls } from './controls';
 import { readClock, validatePositiveFinite } from './clocks';
 import {
   cancelTimerState,
@@ -17,8 +18,10 @@ import type { TimerControls, TimerSnapshot, UseTimerOptions } from './types';
 
 type TimerStore = {
   controls: TimerControls;
+  commitOptions(): void;
   destroy(): void;
   getSnapshot(): TimerSnapshot;
+  getServerSnapshot(): TimerSnapshot;
   setOptions(options: UseTimerOptions): void;
   subscribe(listener: () => void): () => void;
 };
@@ -32,12 +35,16 @@ export function useTimer(options: UseTimerOptions = {}): TimerSnapshot & TimerCo
   storeRef.current.setOptions(options);
 
   useEffect(() => {
+    storeRef.current?.commitOptions();
+  });
+
+  useEffect(() => {
     const store = storeRef.current!;
     if (options.autoStart) store.controls.start();
     return () => store.destroy();
   }, []);
 
-  const snapshot = useSyncExternalStore(storeRef.current.subscribe, storeRef.current.getSnapshot, storeRef.current.getSnapshot);
+  const snapshot = useSyncExternalStore(storeRef.current.subscribe, storeRef.current.getSnapshot, storeRef.current.getServerSnapshot);
   return { ...snapshot, ...storeRef.current.controls };
 }
 
@@ -48,8 +55,10 @@ function createTimerStore(initialOptions: UseTimerOptions): TimerStore {
   const listeners = new Set<() => void>();
   const state: InternalTimerState = createTimerState(readClock());
   let snapshot = toSnapshot(state, readClock());
+  const serverSnapshot = snapshot;
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let endCalledGeneration: number | null = null;
+  let pendingOptionsCommit = false;
 
   const notify = (clock = readClock()) => {
     snapshot = toSnapshot(state, clock);
@@ -66,9 +75,11 @@ function createTimerStore(initialOptions: UseTimerOptions): TimerStore {
   const callOnEnd = (endedSnapshot: TimerSnapshot) => {
     if (endCalledGeneration === state.generation) return;
     endCalledGeneration = state.generation;
+    const generation = state.generation;
+    const callbackControls = guardTimerControls(controls, () => state.generation === generation);
     const reportError = (error: unknown) => {
       if (options.onError) {
-        options.onError(error, endedSnapshot, controls);
+        options.onError(error, endedSnapshot, callbackControls);
         return;
       }
       setTimeout(() => {
@@ -76,7 +87,7 @@ function createTimerStore(initialOptions: UseTimerOptions): TimerStore {
       }, 0);
     };
     try {
-      Promise.resolve(options.onEnd?.(endedSnapshot, controls)).catch(error => {
+      Promise.resolve(options.onEnd?.(endedSnapshot, callbackControls)).catch(error => {
         reportError(error);
       });
     } catch (error) {
@@ -163,11 +174,24 @@ function createTimerStore(initialOptions: UseTimerOptions): TimerStore {
   const controls: TimerControls = { start, pause, resume, reset, restart, cancel };
 
   return {
+    commitOptions: () => {
+      if (!pendingOptionsCommit) return;
+      pendingOptionsCommit = false;
+      if (state.status === 'running') {
+        const clock = readClock();
+        if (!endIfNeeded(clock)) schedule();
+      }
+    },
     controls,
     destroy: clear,
     getSnapshot: () => snapshot,
+    getServerSnapshot: () => serverSnapshot,
     setOptions: nextOptions => {
       validatePositiveFinite(nextOptions.updateIntervalMs ?? 1000, 'updateIntervalMs');
+      pendingOptionsCommit =
+        pendingOptionsCommit ||
+        (nextOptions.updateIntervalMs ?? 1000) !== (options.updateIntervalMs ?? 1000) ||
+        nextOptions.endWhen !== options.endWhen;
       options = nextOptions;
     },
     subscribe: listener => {

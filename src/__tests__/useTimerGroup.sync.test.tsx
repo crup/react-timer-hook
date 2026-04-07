@@ -64,6 +64,34 @@ describe('useTimerGroup sync', () => {
     expect(secondEnd).toHaveBeenCalledTimes(1);
   });
 
+  it('uses guarded controls for stale item onEnd callbacks after restart', () => {
+    let staleCancel!: () => void;
+    const { result } = renderHook(() =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        items: [
+          {
+            id: 'a',
+            autoStart: true,
+            endWhen: snapshot => snapshot.elapsedMilliseconds >= 100,
+            onEnd: (_snapshot, controls) => {
+              staleCancel = () => controls.cancel('stale-end');
+            },
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    expect(result.current.get('a')?.status).toBe('ended');
+
+    act(() => result.current.restart('a'));
+    act(() => staleCancel());
+
+    expect(result.current.get('a')?.status).toBe('running');
+    expect(result.current.get('a')?.cancelReason).toBeNull();
+  });
+
   it('reschedules controlled item schedules when cadence changes', async () => {
     const callback = vi.fn();
     const { rerender } = renderHook(({ everyMs }) =>
@@ -85,5 +113,18 @@ describe('useTimerGroup sync', () => {
     await act(async () => {});
 
     expect(callback).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses the subscribed group clock for get snapshots in a render', () => {
+    const { result } = renderHook(() =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        items: [{ id: 'a', autoStart: true }],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+
+    expect(result.current.get('a')?.now).toBe(result.current.now);
   });
 });

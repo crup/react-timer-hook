@@ -1,0 +1,28 @@
+---
+title: Toast auto-dismiss
+description: Add runtime toast timers with pause-on-hover and manual dismiss.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { ToastAutoDismissSample } from '../../../samples/recipes';
+
+# Toast auto-dismiss
+
+Use a timer group when items are created and removed at runtime. Toasts, snackbars, banners, and temporary notifications are good fits.
+
+<RecipePlayground title="Toast auto-dismiss">
+  <ToastAutoDismissSample />
+</RecipePlayground>
+
+```tsx
+const timers = useTimerGroup({ updateIntervalMs: 250 });
+
+function addToast(id: string) {
+  timers.add({
+    id,
+    autoStart: true,
+    endWhen: snapshot => snapshot.elapsedMilliseconds >= 5000,
+    onEnd: () => timers.remove(id),
+  });
+}
+```

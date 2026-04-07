@@ -1,0 +1,42 @@
+---
+title: Assumptions and limits
+description: Runtime assumptions and intentionally small library boundaries.
+---
+
+# Assumptions and limits
+
+These are design boundaries, not known bugs.
+
+## Browser and React timers
+
+The hooks use recursive `setTimeout` with timestamp math. If a tab, browser, or JavaScript thread delays a timeout, the next snapshot catches up from the current timestamp.
+
+Scheduled callbacks are not background jobs. They run while JavaScript is allowed to run.
+
+## UI cadence and schedule cadence
+
+`updateIntervalMs` is the fallback UI cadence. If a schedule is faster than `updateIntervalMs`, the scheduler wakes at the schedule cadence so the callback receives accurate timing context.
+
+Use a slower `everyMs` for expensive polling. Use `overlap: 'skip'` when async work should not overlap.
+
+## Error handling
+
+`onError` handles `onEnd` failures.
+
+Schedule `onError` handles that schedule's callback failures. If a schedule omits `onError`, the timer or timer-group item `onError` is used.
+
+Errors thrown inside your own error handler remain application-owned.
+
+## Controlled inputs
+
+For `useTimerGroup({ items })`, pass a new array/object when item definitions change. In-place mutation is intentionally not tracked.
+
+For root `useTimer()` and `useScheduledTimer()`, `autoStart` is a mount-time convenience. Use `start()`, `restart()`, `reset({ autoStart: true })`, `pause()`, and `cancel()` for runtime state changes.
+
+## Server rendering
+
+Snapshots include `Date.now()`. If the rendered timestamp must match exactly across server and client, render a placeholder during SSR or start the timer after mount.
+
+## Library boundaries
+
+Formatting, timezone conversion, retry/backoff policy, caching, and data fetching state stay in your app or data layer. The library provides timer state, controls, schedules, diagnostics, and duration math.

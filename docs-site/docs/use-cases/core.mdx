@@ -66,6 +66,21 @@ const remainingMs = Math.max(0, durationMs - timer.elapsedMilliseconds);
 
 Use `elapsedMilliseconds` for active-time countdowns where pause/resume should freeze progress.
 
+## OTP resend cooldown
+
+```tsx
+const cooldownMs = 15_000;
+const timer = useTimer({
+  autoStart: true,
+  updateIntervalMs: 250,
+  endWhen: snapshot => snapshot.elapsedMilliseconds >= cooldownMs,
+});
+
+const canResend = timer.isEnded || timer.isIdle;
+```
+
+Use this for OTP resend, email invite resend, rate-limited retry buttons, and "try again" cooldowns.
+
 ## Error handling
 
 `onEnd` runs once per generation. If the callback can fail, pass `onError`.
@@ -79,4 +94,4 @@ const timer = useTimer({
 });
 ```
 
-For live demos, see [wall clock](/recipes/basic/wall-clock), [stopwatch](/recipes/basic/stopwatch), and [absolute countdown](/recipes/basic/absolute-countdown).
+For live demos, see [wall clock](/recipes/basic/wall-clock), [stopwatch](/recipes/basic/stopwatch), [absolute countdown](/recipes/basic/absolute-countdown), and [OTP resend cooldown](/recipes/basic/otp-resend).

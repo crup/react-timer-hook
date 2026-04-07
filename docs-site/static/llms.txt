@@ -5,6 +5,7 @@ A lightweight React hooks library for building timers, stopwatches, and real-tim
 Docs: https://crup.github.io/react-timer-hook/
 Package: @crup/react-timer-hook
 Install alpha: npm install @crup/react-timer-hook@alpha
+Runtime: Node 18+ and React 18+
 Repository: https://github.com/crup/react-timer-hook
 
 Public exports:
@@ -22,5 +23,6 @@ Core rules:
 - Use cancel(reason) for terminal early stops.
 - Schedules are opt-in through @crup/react-timer-hook/schedules and default to overlap: 'skip'.
 - Schedule callbacks receive context with scheduledAt, firedAt, nextRunAt, overdueCount, and effectiveEveryMs.
+- Schedule callbacks can define onError(error, snapshot, controls, context); otherwise timer or item onError is used.
 - Diagnostics are opt-in only.
 - UI display and data fetching stay in userland.

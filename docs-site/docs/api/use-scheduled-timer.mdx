@@ -19,7 +19,7 @@ type UseScheduledTimerOptions = UseTimerOptions & {
 ```
 
 Schedules run while active and default to `overlap: 'skip'`.
-`onError` comes from `UseTimerOptions` and receives sync throws or async rejections from `onEnd`.
+`onError` comes from `UseTimerOptions` and receives sync throws or async rejections from `onEnd`. It is also the fallback for schedule callback errors when a schedule does not define its own `onError`.
 
 ```ts
 const timer = useScheduledTimer({
@@ -32,6 +32,7 @@ const timer = useScheduledTimer({
       callback: async (snapshot, controls, context) => {
         console.log(context.overdueCount);
       },
+      onError: error => reportPollError(error),
     },
   ],
 });
@@ -39,4 +40,4 @@ const timer = useScheduledTimer({
 
 The third callback argument contains `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`.
 
-When the schedule cadence changes, the active scheduler recalculates the next timeout immediately. Changing only the callback keeps the current cadence and uses the latest callback on the next run.
+When the schedule cadence changes, the active scheduler recalculates the next timeout after the render commits. Changing only the callback keeps the current cadence and uses the latest callback on the next run.

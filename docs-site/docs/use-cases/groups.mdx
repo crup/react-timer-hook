@@ -67,6 +67,21 @@ const timers = useTimerGroup({
 
 Use this for uploads, exports, background jobs, payment attempts, game cooldowns, and multi-step workflows.
 
+## Checkout holds and toasts
+
+```tsx
+const timers = useTimerGroup({
+  items: holds.map(hold => ({
+    id: hold.id,
+    autoStart: true,
+    endWhen: snapshot => snapshot.elapsedMilliseconds >= hold.durationMs,
+    onEnd: () => releaseHold(hold.id),
+  })),
+});
+```
+
+Use this for checkout holds, seat maps, coupon locks, toast auto-dismiss, snackbar pause-on-hover, and temporary notification rows.
+
 ## Controlled items
 
 Pass a new `items` array when server data changes. Do not mutate the same array in place.
@@ -80,4 +95,4 @@ const items = useMemo(
 const timers = useTimerGroup({ items });
 ```
 
-For live demos, see [timer group](/recipes/advanced/timer-group), [group controls](/recipes/advanced/group-controls), [per-item polling](/recipes/advanced/per-item-polling), and [dynamic items](/recipes/advanced/dynamic-items).
+For live demos, see [timer group](/recipes/advanced/timer-group), [group controls](/recipes/advanced/group-controls), [checkout holds](/recipes/advanced/checkout-holds), [per-item polling](/recipes/advanced/per-item-polling), [dynamic items](/recipes/advanced/dynamic-items), and [toast auto-dismiss](/recipes/advanced/toast-auto-dismiss).

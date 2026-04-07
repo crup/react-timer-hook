@@ -135,6 +135,32 @@ describe('useTimer schedules', () => {
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
+  it('restarts schedule cadence from the update time when cadence changes', async () => {
+    const callback = vi.fn();
+    const { rerender } = renderHook(({ everyMs }) =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 1000,
+        schedules: [{ id: 'poll', everyMs, callback }],
+      }),
+      { initialProps: { everyMs: 1000 } },
+    );
+
+    act(() => vi.advanceTimersByTime(500));
+    rerender({ everyMs: 300 });
+    act(() => vi.advanceTimersByTime(299));
+    await act(async () => {});
+    expect(callback).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(1));
+    await act(async () => {});
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ now: 800 }),
+      expect.anything(),
+      expect.objectContaining({ scheduledAt: 800, overdueCount: 0 }),
+    );
+  });
+
   it('checks schedule cadence independently from render update interval', async () => {
     const callback = vi.fn();
     renderHook(() =>
@@ -252,5 +278,127 @@ describe('useTimer schedules', () => {
     await act(async () => {});
 
     expect(logger).toHaveBeenCalledWith(expect.objectContaining({ type: 'callback:error' }));
+  });
+
+  it('routes schedule callback errors to schedule onError', async () => {
+    const onError = vi.fn();
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        schedules: [
+          {
+            id: 'poll',
+            everyMs: 100,
+            callback: () => Promise.reject(new Error('poll failed')),
+            onError,
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(onError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ status: 'running' }),
+      expect.objectContaining({ cancel: expect.any(Function) }),
+      expect.objectContaining({ scheduleId: 'poll' }),
+    );
+  });
+
+  it('falls back to timer onError for schedule callback errors', async () => {
+    const onError = vi.fn();
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        onError,
+        schedules: [
+          {
+            id: 'poll',
+            everyMs: 100,
+            callback: () => Promise.reject(new Error('poll failed')),
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(onError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ status: 'running' }),
+      expect.objectContaining({ cancel: expect.any(Function) }),
+    );
+  });
+
+  it('prefers schedule onError over timer onError for schedule callback errors', async () => {
+    const timerOnError = vi.fn();
+    const scheduleOnError = vi.fn();
+    renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        onError: timerOnError,
+        schedules: [
+          {
+            id: 'poll',
+            everyMs: 100,
+            callback: () => Promise.reject(new Error('poll failed')),
+            onError: scheduleOnError,
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(scheduleOnError).toHaveBeenCalledTimes(1);
+    expect(timerOnError).not.toHaveBeenCalled();
+  });
+
+  it('ignores controls captured by stale schedule callbacks after restart', async () => {
+    let staleCancel!: () => void;
+    const { result } = renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        schedules: [
+          {
+            id: 'poll',
+            everyMs: 100,
+            callback: (_snapshot, controls) => {
+              staleCancel = () => controls.cancel('stale-schedule');
+            },
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    act(() => result.current.restart());
+    act(() => staleCancel());
+
+    expect(result.current.status).toBe('running');
+    expect(result.current.cancelReason).toBeNull();
+  });
+
+  it('throws for duplicate schedule ids', () => {
+    expect(() =>
+      renderHook(() =>
+        useTimer({
+          schedules: [
+            { id: 'poll', everyMs: 100, callback: vi.fn() },
+            { id: 'poll', everyMs: 200, callback: vi.fn() },
+          ],
+        }),
+      ),
+    ).toThrow('Duplicate schedule id "poll"');
   });
 });

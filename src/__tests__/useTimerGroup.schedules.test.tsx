@@ -102,6 +102,153 @@ describe('useTimerGroup schedules and diagnostics', () => {
     );
   });
 
+  it('restarts controlled schedule cadence from the update time', async () => {
+    const callback = vi.fn();
+    const { rerender } = renderHook(({ everyMs }) =>
+      useTimerGroup({
+        updateIntervalMs: 1000,
+        items: [
+          {
+            id: 'a',
+            autoStart: true,
+            schedules: [{ id: 'poll', everyMs, callback }],
+          },
+        ],
+      }),
+      { initialProps: { everyMs: 1000 } },
+    );
+
+    act(() => vi.advanceTimersByTime(500));
+    rerender({ everyMs: 300 });
+    act(() => vi.advanceTimersByTime(299));
+    await act(async () => {});
+    expect(callback).not.toHaveBeenCalled();
+
+    act(() => vi.advanceTimersByTime(1));
+    await act(async () => {});
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ now: 800 }),
+      expect.anything(),
+      expect.objectContaining({ scheduledAt: 800, overdueCount: 0 }),
+    );
+  });
+
+  it('routes schedule callback errors to item schedule onError', async () => {
+    const onError = vi.fn();
+    renderHook(() =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        items: [
+          {
+            id: 'a',
+            autoStart: true,
+            schedules: [
+              {
+                id: 'poll',
+                everyMs: 100,
+                callback: () => Promise.reject(new Error('poll failed')),
+                onError,
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(onError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ status: 'running' }),
+      expect.objectContaining({ cancel: expect.any(Function) }),
+      expect.objectContaining({ scheduleId: 'poll' }),
+    );
+  });
+
+  it('falls back to item onError for schedule callback errors', async () => {
+    const onError = vi.fn();
+    renderHook(() =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        items: [
+          {
+            id: 'a',
+            autoStart: true,
+            onError,
+            schedules: [
+              {
+                id: 'poll',
+                everyMs: 100,
+                callback: () => Promise.reject(new Error('poll failed')),
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    expect(onError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({ status: 'running' }),
+      expect.objectContaining({ cancel: expect.any(Function) }),
+    );
+  });
+
+  it('ignores controls captured by stale item schedules after restart', async () => {
+    let staleCancel!: () => void;
+    const { result } = renderHook(() =>
+      useTimerGroup({
+        updateIntervalMs: 100,
+        items: [
+          {
+            id: 'a',
+            autoStart: true,
+            schedules: [
+              {
+                id: 'poll',
+                everyMs: 100,
+                callback: (_snapshot, controls) => {
+                  staleCancel = () => controls.cancel('stale-schedule');
+                },
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    await act(async () => {});
+
+    act(() => result.current.restart('a'));
+    act(() => staleCancel());
+
+    expect(result.current.get('a')?.status).toBe('running');
+    expect(result.current.get('a')?.cancelReason).toBeNull();
+  });
+
+  it('throws for duplicate item schedule ids', () => {
+    expect(() =>
+      renderHook(() =>
+        useTimerGroup({
+          items: [
+            {
+              id: 'a',
+              schedules: [
+                { id: 'poll', everyMs: 100, callback: vi.fn() },
+                { id: 'poll', everyMs: 200, callback: vi.fn() },
+              ],
+            },
+          ],
+        }),
+      ),
+    ).toThrow('Duplicate schedule id "poll"');
+  });
+
   it('drives many timers with one cadence', () => {
     const items = Array.from({ length: 100 }, (_, index) => ({ id: String(index), autoStart: true }));
     const { result } = renderHook(() => useTimerGroup({ updateIntervalMs: 100, items }));

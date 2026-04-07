@@ -1,0 +1,34 @@
+---
+title: Autosave heartbeat
+description: Run draft saves on a cadence while a screen is active.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { AutosaveHeartbeatSample } from '../../../samples/recipes';
+
+# Autosave heartbeat
+
+Use schedules when a running timer should own a cadence callback. This fits draft autosave, heartbeat pings, presence updates, and lightweight status refreshes.
+
+<RecipePlayground title="Autosave heartbeat">
+  <AutosaveHeartbeatSample />
+</RecipePlayground>
+
+```tsx
+const timer = useScheduledTimer({
+  autoStart: true,
+  schedules: [
+    {
+      id: 'autosave',
+      everyMs: 5000,
+      overlap: 'skip',
+      callback: async () => {
+        await saveDraft();
+      },
+      onError: error => {
+        reportAutosaveError(error);
+      },
+    },
+  ],
+});
+```

@@ -119,7 +119,7 @@ export function restartTimerState(state: InternalTimerState, clock: ClockRead): 
 }
 
 export function cancelTimerState(state: InternalTimerState, clock: ClockRead, reason?: string): boolean {
-  if (state.status === 'ended' || state.status === 'cancelled') return false;
+  if (state.status !== 'running' && state.status !== 'paused') return false;
 
   state.baseElapsedMilliseconds = getElapsedMilliseconds(state, clock);
   state.activeStartedAtMonotonic = null;

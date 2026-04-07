@@ -147,6 +147,40 @@ describe('useTimer lifecycle', () => {
     expect(onError).toHaveBeenCalledWith(expect.any(Error), expect.objectContaining({ status: 'ended' }), expect.anything());
   });
 
+  it('ignores controls captured by stale onEnd callbacks after restart', () => {
+    let staleCancel!: () => void;
+    const { result } = renderHook(() =>
+      useTimer({
+        autoStart: true,
+        updateIntervalMs: 100,
+        endWhen: snapshot => snapshot.elapsedMilliseconds >= 100,
+        onEnd: (_snapshot, controls) => {
+          staleCancel = () => controls.cancel('stale-end');
+        },
+      }),
+    );
+
+    act(() => vi.advanceTimersByTime(100));
+    expect(result.current.status).toBe('ended');
+
+    act(() => result.current.restart());
+    act(() => staleCancel());
+
+    expect(result.current.status).toBe('running');
+    expect(result.current.cancelReason).toBeNull();
+  });
+
+  it('reschedules after update interval changes', () => {
+    const { result, rerender } = renderHook(({ updateIntervalMs }) => useTimer({ autoStart: true, updateIntervalMs }), {
+      initialProps: { updateIntervalMs: 1000 },
+    });
+
+    rerender({ updateIntervalMs: 100 });
+    act(() => vi.advanceTimersByTime(100));
+
+    expect(result.current.tick).toBe(1);
+  });
+
   it('throws for invalid update intervals', () => {
     expect(() => renderHook(() => useTimer({ updateIntervalMs: 0 }))).toThrow(RangeError);
   });

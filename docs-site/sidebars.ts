@@ -29,6 +29,7 @@ const sidebars: SidebarsConfig = {
             'recipes/basic/stopwatch',
             'recipes/basic/absolute-countdown',
             'recipes/basic/pausable-countdown',
+            'recipes/basic/otp-resend',
             'recipes/basic/manual-controls',
           ],
         },
@@ -39,6 +40,7 @@ const sidebars: SidebarsConfig = {
           items: [
             'recipes/intermediate/once-only-on-end',
             'recipes/intermediate/polling-schedule',
+            'recipes/intermediate/autosave-heartbeat',
             'recipes/intermediate/poll-and-cancel',
             'recipes/intermediate/backend-event-stop',
             'recipes/intermediate/debug-logs',
@@ -52,8 +54,10 @@ const sidebars: SidebarsConfig = {
             'recipes/advanced/many-display-countdowns',
             'recipes/advanced/timer-group',
             'recipes/advanced/group-controls',
+            'recipes/advanced/checkout-holds',
             'recipes/advanced/per-item-polling',
             'recipes/advanced/dynamic-items',
+            'recipes/advanced/toast-auto-dismiss',
           ],
         },
       ],
@@ -61,7 +65,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'Project',
-      items: ['project/debug-logs', 'project/release-channels', 'project/contributing'],
+      items: ['project/caveats', 'project/debug-logs', 'project/release-channels', 'project/contributing'],
     },
   ],
 };

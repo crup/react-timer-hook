@@ -1,0 +1,27 @@
+---
+title: Checkout holds
+description: Manage many independent reservation holds with one scheduler.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { CheckoutHoldsSample } from '../../../samples/recipes';
+
+# Checkout holds
+
+Use timer groups when a checkout screen has multiple independent holds: cart, seat, inventory, coupon, or payment authorization windows.
+
+<RecipePlayground title="Checkout holds">
+  <CheckoutHoldsSample />
+</RecipePlayground>
+
+```tsx
+const timers = useTimerGroup({
+  updateIntervalMs: 1000,
+  items: holds.map(hold => ({
+    id: hold.id,
+    autoStart: true,
+    endWhen: snapshot => snapshot.elapsedMilliseconds >= hold.durationMs,
+    onEnd: () => releaseHold(hold.id),
+  })),
+});
+```

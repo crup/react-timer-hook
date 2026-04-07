@@ -32,7 +32,7 @@ type TimerGroupItem = {
 };
 ```
 
-`onError` receives sync throws and async rejections from that item's `onEnd`.
+`onError` receives sync throws and async rejections from that item's `onEnd`. It also handles item schedule callback failures when a schedule does not define its own `onError`.
 
 When `items` is controlled by props, pass a new array/object when item definitions change. The store preserves state for existing IDs and syncs new callbacks, deadlines, and schedules without resetting the item generation.
 

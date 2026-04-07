@@ -115,6 +115,40 @@ export function PausableCountdownSample() {
   );
 }
 
+export function OtpResendSample() {
+  const cooldownMs = 15_000;
+  const [requests, setRequests] = useState(1);
+  const timer = useTimer({
+    autoStart: true,
+    updateIntervalMs: 250,
+    endWhen: snapshot => snapshot.elapsedMilliseconds >= cooldownMs,
+  });
+  const remainingMs = Math.max(0, cooldownMs - timer.elapsedMilliseconds);
+  const canResend = timer.isEnded || timer.isIdle;
+
+  function resend() {
+    setRequests(value => value + 1);
+    timer.restart();
+  }
+
+  return (
+    <DemoShell eyebrow="OTP resend" title={canResend ? 'Ready to resend' : `${Math.ceil(remainingMs / 1000)}s cooldown`} status={timer.status}>
+      <Progress value={100 - (remainingMs / cooldownMs) * 100} tone={canResend ? 'complete' : 'active'} />
+      <MetricGrid
+        metrics={[
+          { label: 'Requests sent', value: String(requests) },
+          { label: 'Cooldown', value: '15s' },
+          { label: 'Button', value: canResend ? 'enabled' : 'disabled' },
+        ]}
+      />
+      <div className="sample-toolbar">
+        <ActionButton onClick={resend} disabled={!canResend} label={canResend ? 'Resend OTP' : 'Wait for cooldown'} />
+        <ActionButton onClick={timer.restart} label="Restart cooldown" tone="secondary" />
+      </div>
+    </DemoShell>
+  );
+}
+
 export function ManualTimerSample() {
   const timer = useTimer({ updateIntervalMs: 500 });
 
@@ -174,6 +208,38 @@ export function PollingSample() {
         ]}
       />
       <EventStream events={polls.length ? polls : ['leading poll starts immediately']} />
+      <TimerControlsPanel timer={timer} controls={{ cancel: true }} />
+    </DemoShell>
+  );
+}
+
+export function AutosaveHeartbeatSample() {
+  const [events, setEvents] = useState<string[]>([]);
+  const timer = useScheduledTimer({
+    autoStart: true,
+    updateIntervalMs: 500,
+    schedules: [
+      {
+        id: 'autosave',
+        everyMs: 2000,
+        leading: true,
+        callback: (_snapshot, _controls, context) => {
+          setEvents(value => [`saved draft (${context.overdueCount} missed)`, ...value].slice(0, 5));
+        },
+      },
+    ],
+  });
+
+  return (
+    <DemoShell eyebrow="Autosave heartbeat" title={events[0] ?? 'Waiting for first save'} status={timer.status}>
+      <MetricGrid
+        metrics={[
+          { label: 'Cadence', value: '2s' },
+          { label: 'Overlap', value: 'skip' },
+          { label: 'Saves', value: String(events.length) },
+        ]}
+      />
+      <EventStream events={events.length ? events : ['first autosave runs on start']} />
       <TimerControlsPanel timer={timer} controls={{ cancel: true }} />
     </DemoShell>
   );
@@ -363,6 +429,50 @@ export function GroupControlsSample() {
   );
 }
 
+export function CheckoutHoldsSample() {
+  const holds = useMemo(
+    () => [
+      { id: 'cart', label: 'Cart hold', durationMs: 30_000 },
+      { id: 'seat-a7', label: 'Seat A7', durationMs: 45_000 },
+      { id: 'coupon', label: 'Coupon lock', durationMs: 60_000 },
+    ],
+    [],
+  );
+  const timers = useTimerGroup({
+    updateIntervalMs: 500,
+    items: holds.map(hold => ({
+      id: hold.id,
+      autoStart: true,
+      endWhen: snapshot => snapshot.elapsedMilliseconds >= hold.durationMs,
+    })),
+  });
+
+  return (
+    <div className="sample-box">
+      <div className="sample-board">
+        {holds.map(hold => {
+          const timer = timers.get(hold.id);
+          const remainingMs = Math.max(0, hold.durationMs - (timer?.elapsedMilliseconds ?? 0));
+          return (
+            <div key={hold.id} className="sample-row-card">
+              <div>
+                <strong>{hold.label}</strong>
+                <span>{timer?.isEnded ? 'expired' : `${formatClock(remainingMs)} left`} · {timer?.status}</span>
+              </div>
+              <Progress value={100 - (remainingMs / hold.durationMs) * 100} compact tone={timer?.isEnded ? 'complete' : 'active'} />
+              <div className="sample-mini-controls">
+                <ActionButton onClick={() => timers.pause(hold.id)} disabled={!timer?.isRunning} label="Pause" small tone="secondary" />
+                <ActionButton onClick={() => timers.resume(hold.id)} disabled={!timer?.isPaused} label="Resume" small />
+                <ActionButton onClick={() => timers.restart(hold.id)} label="Extend" small />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function PerItemPollingSample() {
   const [checks, setChecks] = useState<Record<string, number>>({});
   const timers = useTimerGroup({
@@ -434,6 +544,52 @@ export function DynamicItemsSample() {
       <div className="sample-toolbar">
         <ActionButton onClick={addTimer} label="Add timer" />
         <ActionButton onClick={timers.clear} disabled={timers.size === 0} label="Clear all" tone="secondary" />
+      </div>
+    </DemoShell>
+  );
+}
+
+export function ToastAutoDismissSample() {
+  const [counter, setCounter] = useState(1);
+  const timers = useTimerGroup({ updateIntervalMs: 250 });
+
+  function addToast() {
+    const id = `toast-${counter}`;
+    setCounter(value => value + 1);
+    timers.add({
+      id,
+      autoStart: true,
+      endWhen: snapshot => snapshot.elapsedMilliseconds >= 5000,
+      onEnd: () => timers.remove(id),
+    });
+  }
+
+  return (
+    <DemoShell eyebrow="Toast expiry" title={`${timers.size} visible`} status={timers.size ? 'running' : 'idle'}>
+      <div className="sample-board">
+        {timers.ids.length === 0 ? <p className="sample-muted">Add a toast and pause it like a hover interaction.</p> : null}
+        {timers.ids.map(id => {
+          const timer = timers.get(id);
+          const remainingMs = Math.max(0, 5000 - (timer?.elapsedMilliseconds ?? 0));
+          return (
+            <div key={id} className="sample-row-card">
+              <div>
+                <strong>{id}</strong>
+                <span>{formatClock(remainingMs)} before dismiss · {timer?.status}</span>
+              </div>
+              <Progress value={100 - (remainingMs / 5000) * 100} compact tone="warning" />
+              <div className="sample-mini-controls">
+                <ActionButton onClick={() => timers.pause(id)} disabled={!timer?.isRunning} label="Hover pause" small tone="secondary" />
+                <ActionButton onClick={() => timers.resume(id)} disabled={!timer?.isPaused} label="Resume" small />
+                <ActionButton onClick={() => timers.remove(id)} label="Dismiss" small tone="danger" />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="sample-toolbar">
+        <ActionButton onClick={addToast} label="Add toast" />
+        <ActionButton onClick={timers.clear} disabled={timers.size === 0} label="Clear" tone="secondary" />
       </div>
     </DemoShell>
   );

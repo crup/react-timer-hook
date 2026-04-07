@@ -1,0 +1,33 @@
+---
+title: OTP resend cooldown
+description: Enable a resend button after a short cooldown window.
+---
+
+import RecipePlayground from '@site/src/components/RecipePlayground';
+import { OtpResendSample } from '../../../samples/recipes';
+
+# OTP resend cooldown
+
+Use the core hook for local cooldowns such as OTP resend, login retry, invite resend, or "try again" buttons.
+
+<RecipePlayground title="OTP resend cooldown">
+  <OtpResendSample />
+</RecipePlayground>
+
+```tsx
+const cooldownMs = 15_000;
+
+const timer = useTimer({
+  autoStart: true,
+  updateIntervalMs: 250,
+  endWhen: snapshot => snapshot.elapsedMilliseconds >= cooldownMs,
+});
+
+const canResend = timer.isEnded || timer.isIdle;
+
+return (
+  <button disabled={!canResend} onClick={timer.restart}>
+    {canResend ? 'Resend OTP' : 'Wait'}
+  </button>
+);
+```

@@ -10,12 +10,16 @@ Start with the root hook, then add a subpath only when the screen needs it.
 | Need | Use | Import | Live recipe |
 | --- | --- | --- | --- |
 | Stopwatch, clock, absolute deadline, pausable countdown | Core | `@crup/react-timer-hook` | [Stopwatch](/recipes/basic/stopwatch) |
+| OTP resend, retry button, invite cooldown | Core + duration | `@crup/react-timer-hook` + `/duration` | [OTP resend cooldown](/recipes/basic/otp-resend) |
 | Human display parts like days/minutes/seconds | Core + duration | `@crup/react-timer-hook` + `/duration` | [Pausable countdown](/recipes/basic/pausable-countdown) |
 | Polling or cadence callbacks while a timer is active | Schedules | `@crup/react-timer-hook/schedules` | [Polling schedule](/recipes/intermediate/polling-schedule) |
+| Draft autosave or presence heartbeat | Schedules | `@crup/react-timer-hook/schedules` | [Autosave heartbeat](/recipes/intermediate/autosave-heartbeat) |
 | Polling that can stop the lifecycle early | Schedules | `@crup/react-timer-hook/schedules` | [Poll and cancel](/recipes/intermediate/poll-and-cancel) |
 | Dozens of rows with independent pause/resume/cancel | Timer group | `@crup/react-timer-hook/group` | [Timer group](/recipes/advanced/timer-group) |
+| Checkout or reservation holds | Timer group | `@crup/react-timer-hook/group` | [Checkout holds](/recipes/advanced/checkout-holds) |
 | Per-row polling or status checks | Timer group + schedules | `@crup/react-timer-hook/group` | [Per-item polling](/recipes/advanced/per-item-polling) |
 | Runtime add/update/remove of timer items | Timer group | `@crup/react-timer-hook/group` | [Dynamic items](/recipes/advanced/dynamic-items) |
+| Toast or snackbar auto-dismiss | Timer group | `@crup/react-timer-hook/group` | [Toast auto-dismiss](/recipes/advanced/toast-auto-dismiss) |
 | Development event tracing | Diagnostics | `@crup/react-timer-hook/diagnostics` | [Diagnostics](/recipes/intermediate/debug-logs) |
 
 ## Real-world mapping
@@ -26,9 +30,10 @@ Start with the root hook, then add a subpath only when the screen needs it.
 | Auction list with pause/resume per lot | Timer group | Each row owns lifecycle state and controls. |
 | Auction status polling | Schedules or group schedules | Poll cadence is separate from UI update cadence. |
 | Checkout reservation hold | Core + duration | Pausable duration math and friendly display parts. |
+| OTP resend button | Core + duration | Short local cooldown with a disabled/enabled button state. |
 | Seat map with many expiring holds | Timer group | Many keyed holds, one scheduler. |
+| Draft editor autosave | Schedules | A running lifecycle owns the autosave cadence and errors. |
 | Upload/job dashboard | Timer group + schedules | Rows can poll status and end independently. |
-| OTP resend button | Core | Short local cooldown with `elapsedMilliseconds`. |
 | Focus/break timer | Core + duration | Pausable countdown based on active elapsed time. |
 | Live clock widget | Core | Derive `new Date(timer.now)`. |
 | Toast expiry with pause-on-hover | Timer group | Each toast can pause, resume, cancel, and remove. |

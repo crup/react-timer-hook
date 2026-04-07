@@ -9,7 +9,7 @@ description: Compose active timer lifecycles with polling, heartbeat checks, and
 import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
 ```
 
-Use schedules when a timer needs side effects on a cadence. The timer lifecycle and schedule cadence are separate: `updateIntervalMs` updates UI, `everyMs` runs the callback.
+Use schedules when a timer needs side effects on a cadence. `updateIntervalMs` is the fallback UI cadence. If a schedule is faster, the scheduler wakes at the schedule cadence so callbacks receive timely `scheduledAt` and `firedAt` context.
 
 ## Poll backend status
 
@@ -33,6 +33,25 @@ const timer = useScheduledTimer({
 ```
 
 Use this for auction status checks, job status polling, order payment status, device heartbeat checks, and reservation validation.
+
+## Autosave heartbeat
+
+```tsx
+const timer = useScheduledTimer({
+  autoStart: true,
+  schedules: [
+    {
+      id: 'autosave',
+      everyMs: 5000,
+      overlap: 'skip',
+      callback: () => saveDraft(),
+      onError: error => reportAutosaveError(error),
+    },
+  ],
+});
+```
+
+Use this for draft autosave, presence pings, collaborative editor heartbeats, and "last active" updates.
 
 ## Use timing context
 
@@ -63,4 +82,4 @@ schedules: [
 
 `cancel(reason)` is for terminal early stops. It does not call `onEnd`.
 
-For live demos, see [polling schedule](/recipes/intermediate/polling-schedule), [poll and cancel](/recipes/intermediate/poll-and-cancel), and [backend event stop](/recipes/intermediate/backend-event-stop).
+For live demos, see [polling schedule](/recipes/intermediate/polling-schedule), [autosave heartbeat](/recipes/intermediate/autosave-heartbeat), [poll and cancel](/recipes/intermediate/poll-and-cancel), and [backend event stop](/recipes/intermediate/backend-event-stop).

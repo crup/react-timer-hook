@@ -1,11 +1,13 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { readClock, validatePositiveFinite } from './clocks';
+import { guardTimerControls } from './controls';
 import { baseDebugEvent, emitDiagnostics } from './debug';
 import {
   evaluateSchedules,
   getScheduleSignature,
   getNextScheduleDelay,
   syncScheduleStates,
+  validateSchedules,
   type ScheduleEvent,
   type ScheduleState,
 } from './scheduleCore';
@@ -29,8 +31,10 @@ import type { TimerControls, TimerSnapshot, UseScheduledTimerOptions } from './t
 
 type ScheduledTimerStore = {
   controls: TimerControls;
+  commitOptions(): void;
   destroy(): void;
   getSnapshot(): TimerSnapshot;
+  getServerSnapshot(): TimerSnapshot;
   setOptions(options: UseScheduledTimerOptions): void;
   subscribe(listener: () => void): () => void;
 };
@@ -44,12 +48,16 @@ export function useScheduledTimer(options: UseScheduledTimerOptions = {}): Timer
   storeRef.current.setOptions(options);
 
   useEffect(() => {
+    storeRef.current?.commitOptions();
+  });
+
+  useEffect(() => {
     const store = storeRef.current!;
     if (options.autoStart) store.controls.start();
     return () => store.destroy();
   }, []);
 
-  const snapshot = useSyncExternalStore(storeRef.current.subscribe, storeRef.current.getSnapshot, storeRef.current.getSnapshot);
+  const snapshot = useSyncExternalStore(storeRef.current.subscribe, storeRef.current.getSnapshot, storeRef.current.getServerSnapshot);
   return { ...snapshot, ...storeRef.current.controls };
 }
 
@@ -61,8 +69,10 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
   const item: TimerItem<TimerControls, UseScheduledTimerOptions> = createTimerItem(options, readClock());
   const schedules = new Map<string, ScheduleState>();
   let snapshot = getTimerItemSnapshot(item, readClock());
+  const serverSnapshot = snapshot;
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let scheduleSignature = getScheduleSignature(options.schedules);
+  let pendingOptionsCommit = false;
 
   const notify = (clock = readClock()) => {
     snapshot = getTimerItemSnapshot(item, clock);
@@ -86,7 +96,8 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
   };
 
   const onEndError = (error: unknown, eventSnapshot: TimerSnapshot, generation: number) => {
-    options.onError?.(error, eventSnapshot, controls);
+    const callbackControls = guardTimerControls(controls, () => item.state.generation === generation);
+    options.onError?.(error, eventSnapshot, callbackControls);
     emitDiagnostics(options.diagnostics, {
       type: 'callback:error',
       scope: 'timer',
@@ -109,7 +120,9 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
   const process = (clock = readClock(), activation = false) => {
     if (item.state.status !== 'running') return false;
 
-    const endedSnapshot = endTimerItemIfNeeded(item, clock, controls, onEndError);
+    const generation = item.state.generation;
+    const callbackControls = guardTimerControls(controls, () => item.state.generation === generation);
+    const endedSnapshot = endTimerItemIfNeeded(item, clock, callbackControls, onEndError);
     if (endedSnapshot) {
       clear();
       emit('timer:end', endedSnapshot);
@@ -123,9 +136,10 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
       states: schedules,
       snapshot: currentSnapshot,
       generation: item.state.generation,
-      controls,
+      controls: callbackControls,
       activation,
       isLive: generation => item.state.generation === generation,
+      onError: (error, errorSnapshot, errorControls) => options.onError?.(error, errorSnapshot, errorControls),
       onEvent: emitSchedule(currentSnapshot, item.state.generation),
     });
     return false;
@@ -216,19 +230,32 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
   const controls: TimerControls = { start, pause, resume, reset, restart, cancel };
 
   return {
+    commitOptions: () => {
+      if (!pendingOptionsCommit) return;
+      pendingOptionsCommit = false;
+      syncScheduleStates(options.schedules, schedules, readClock().wallNow, item.state.status === 'running');
+      if (item.state.status === 'running') {
+        const clock = readClock();
+        if (!process(clock)) schedule(false);
+      }
+    },
     controls,
     destroy: clear,
     getSnapshot: () => snapshot,
+    getServerSnapshot: () => serverSnapshot,
     setOptions: nextOptions => {
       validateOptions(nextOptions);
       const nextScheduleSignature = getScheduleSignature(nextOptions.schedules);
       const schedulesChanged = nextScheduleSignature !== scheduleSignature;
+      pendingOptionsCommit =
+        pendingOptionsCommit ||
+        schedulesChanged ||
+        (nextOptions.updateIntervalMs ?? 1000) !== (options.updateIntervalMs ?? 1000) ||
+        nextOptions.endWhen !== options.endWhen;
       options = nextOptions;
       item.definition = nextOptions;
       if (schedulesChanged) {
         scheduleSignature = nextScheduleSignature;
-        syncScheduleStates(options.schedules, schedules, readClock().wallNow, item.state.status === 'running');
-        schedule(false);
       }
     },
     subscribe: listener => {
@@ -240,5 +267,5 @@ function createScheduledTimerStore(initialOptions: UseScheduledTimerOptions): Sc
 
 function validateOptions(options: UseScheduledTimerOptions): void {
   validatePositiveFinite(options.updateIntervalMs ?? 1000, 'updateIntervalMs');
-  options.schedules?.forEach(schedule => validatePositiveFinite(schedule.everyMs, 'schedule.everyMs'));
+  validateSchedules(options.schedules);
 }

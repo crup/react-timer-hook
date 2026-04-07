@@ -67,4 +67,11 @@ describe('timer state transitions', () => {
     expect(endTimerState(ended, clock(10))).toBe(true);
     expect(startTimerState(ended, clock(20))).toBe(false);
   });
+
+  it('does not cancel an idle timer', () => {
+    const state = createTimerState(clock(0));
+
+    expect(cancelTimerState(state, clock(10), 'idle')).toBe(false);
+    expect(state.status).toBe('idle');
+  });
 });

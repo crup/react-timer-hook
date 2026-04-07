@@ -10,6 +10,10 @@ const context = {
   install: {
     alpha: `npm install ${pkg.name}@alpha`,
   },
+  runtime: {
+    node: '>=18.0.0',
+    react: '>=18.0.0',
+  },
   exports: [
     '@crup/react-timer-hook: useTimer',
     '@crup/react-timer-hook/group: useTimerGroup',
@@ -21,6 +25,7 @@ const context = {
     'Use now for wall-clock deadlines and clocks.',
     'Use elapsedMilliseconds for active elapsed duration.',
     'Use endWhen(snapshot) to end a lifecycle.',
+    'Use schedule onError or timer/item onError for schedule callback failures.',
     'Use cancel(reason) for terminal early stops.',
     'Keep formatting, timezone, retries, and business rules in userland.',
   ],

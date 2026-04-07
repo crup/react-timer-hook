@@ -7,6 +7,8 @@ npm install @crup/react-timer-hook@alpha
 pnpm add @crup/react-timer-hook@alpha
 ```
 
+Runtime requirements: Node 18+ and React 18+.
+
 ## Exports
 
 ```ts
@@ -41,12 +43,14 @@ Use `useScheduledTimer()` from `@crup/react-timer-hook/schedules` for app-owned 
 
 Schedule callbacks receive `(snapshot, controls, context)`. `context` includes `scheduleId`, `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`.
 
+Schedules can define `onError(error, snapshot, controls, context)`. When omitted, schedule callback failures fall back to the timer or timer-group item `onError`.
+
 ## Use cases
 
 - `/use-cases/`: choose by composition.
-- `/use-cases/core/`: clock, stopwatch, absolute deadline, pausable duration countdown.
-- `/use-cases/schedules/`: polling, heartbeat checks, timing context, early cancel.
-- `/use-cases/groups/`: auctions, checkout holds, upload rows, job dashboards.
+- `/use-cases/core/`: clock, stopwatch, absolute deadline, pausable duration countdown, OTP resend cooldown.
+- `/use-cases/schedules/`: polling, autosave heartbeat checks, timing context, early cancel.
+- `/use-cases/groups/`: auctions, checkout holds, toast auto-dismiss, upload rows, job dashboards.
 - `/use-cases/composition/`: combine core, duration, schedules, groups, and diagnostics.
 
 ## Recipes index
@@ -56,11 +60,13 @@ Basic:
 - `/recipes/basic/stopwatch/`: render `timer.elapsedMilliseconds`.
 - `/recipes/basic/absolute-countdown/`: `Math.max(0, expiresAt - timer.now)`.
 - `/recipes/basic/pausable-countdown/`: `durationMs - timer.elapsedMilliseconds`.
+- `/recipes/basic/otp-resend/`: resend button cooldown.
 - `/recipes/basic/manual-controls/`: use `start`, `restart`, and `reset`.
 
 Intermediate:
 - `/recipes/intermediate/once-only-on-end/`: `onEnd`.
 - `/recipes/intermediate/polling-schedule/`: `schedules`.
+- `/recipes/intermediate/autosave-heartbeat/`: scheduled draft saves or presence pings.
 - `/recipes/intermediate/poll-and-cancel/`: call `controls.cancel(reason)`.
 - `/recipes/intermediate/backend-event-stop/`: call `timer.cancel(reason)` from a subscription.
 - `/recipes/intermediate/debug-logs/`: opt in with `consoleTimerDiagnostics`.
@@ -69,8 +75,17 @@ Advanced:
 - `/recipes/advanced/many-display-countdowns/`: one shared `useTimer`.
 - `/recipes/advanced/timer-group/`: `useTimerGroup`.
 - `/recipes/advanced/group-controls/`: `pauseAll` and `resumeAll`.
+- `/recipes/advanced/checkout-holds/`: independent reservation holds.
 - `/recipes/advanced/per-item-polling/`: item `schedules`.
 - `/recipes/advanced/dynamic-items/`: `add`, `update`, `remove`.
+- `/recipes/advanced/toast-auto-dismiss/`: runtime toast timers.
+
+## Assumptions
+
+- Schedule callbacks are JavaScript timers, not native background jobs.
+- Faster schedules can wake the scheduler more often than `updateIntervalMs`.
+- `autoStart` is mount-time for `useTimer` and `useScheduledTimer`; use controls for runtime changes.
+- For `useTimerGroup({ items })`, update item definitions immutably.
 
 ## MCP
 

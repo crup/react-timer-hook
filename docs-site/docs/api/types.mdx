@@ -59,10 +59,18 @@ type TimerSchedule = {
     controls: TimerControls,
     context: TimerScheduleContext,
   ) => void | Promise<void>;
+  onError?: (
+    error: unknown,
+    snapshot: TimerSnapshot,
+    controls: TimerControls,
+    context: TimerScheduleContext,
+  ) => void;
 };
 ```
 
 `scheduledAt` is the intended fire time. `firedAt` is when the browser actually ran the callback. `overdueCount` reports how many schedule windows were missed before this callback because the browser, tab, or previous work delayed execution.
+
+Schedule IDs must be unique within the same schedule list. If a schedule `callback` fails, schedule `onError` handles it. If schedule `onError` is omitted, the timer or timer-group item `onError` is used.
 
 ## Diagnostics
 
