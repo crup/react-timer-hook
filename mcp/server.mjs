@@ -78,6 +78,61 @@ const resources = {
   },
 };
 
+const recipes = {
+  'wall-clock': 'Use useTimer({ autoStart: true }) and render new Date(timer.now). Keep locale and timezone formatting in userland.',
+  stopwatch: 'Use useTimer({ updateIntervalMs: 100 }). Render timer.elapsedMilliseconds and wire start, pause, resume, restart, and reset to buttons.',
+  'absolute-countdown': 'Use timer.now for server deadlines: const remainingMs = Math.max(0, expiresAt - timer.now). Use endWhen: snapshot => snapshot.now >= expiresAt.',
+  'pausable-countdown': 'Use timer.elapsedMilliseconds for active elapsed time: const remainingMs = durationMs - timer.elapsedMilliseconds. Paused time is excluded.',
+  'otp-resend': 'Use a duration countdown. Disable the resend button while timer.isRunning and enable it after timer.isEnded or remainingMs <= 0.',
+  polling: 'Import useScheduledTimer from @crup/react-timer-hook/schedules. Add schedules: [{ id, everyMs, overlap: "skip", callback }].',
+  'autosave-heartbeat': 'Use useScheduledTimer with a schedule every 5000-15000ms. Keep retry/backoff and request state in app code.',
+  'timer-group': 'Import useTimerGroup from @crup/react-timer-hook/group for many keyed timers that each need independent pause, resume, cancel, restart, or onEnd.',
+  'per-item-polling': 'Use useTimerGroup with item schedules when each row needs independent polling cadence or cancel conditions.',
+  diagnostics: 'Import consoleTimerDiagnostics from @crup/react-timer-hook/diagnostics and pass diagnostics only while debugging.',
+};
+
+const tools = [
+  {
+    name: 'get_api_docs',
+    description: 'Return the compact API notes for @crup/react-timer-hook.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'get_recipe',
+    description: 'Return guidance for a named recipe or use case.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          description: `Recipe name. Known values: ${Object.keys(recipes).join(', ')}.`,
+        },
+      },
+      required: ['name'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'search_docs',
+    description: 'Search API and recipe notes for a query.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Search query such as countdown, polling, group, diagnostics, or OTP.',
+        },
+      },
+      required: ['query'],
+      additionalProperties: false,
+    },
+  },
+];
+
 const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: false });
 
 rl.on('line', line => {
@@ -96,7 +151,7 @@ rl.on('line', line => {
     respond(id, {
       protocolVersion: '2024-11-05',
       serverInfo: { name: 'react-timer-hook-docs', version: pkg.version },
-      capabilities: { resources: {} },
+      capabilities: { resources: {}, tools: {} },
     });
     return;
   }
@@ -131,6 +186,51 @@ rl.on('line', line => {
     return;
   }
 
+  if (method === 'tools/list') {
+    respond(id, { tools });
+    return;
+  }
+
+  if (method === 'tools/call') {
+    const name = params?.name;
+    const args = params?.arguments ?? {};
+
+    if (name === 'get_api_docs') {
+      respondTool(id, apiText);
+      return;
+    }
+
+    if (name === 'get_recipe') {
+      const recipe = recipes[normalizeRecipeName(args.name)];
+      if (!recipe) {
+        respondError(id, -32602, `Unknown recipe: ${args.name ?? 'missing name'}`);
+        return;
+      }
+
+      respondTool(id, recipe);
+      return;
+    }
+
+    if (name === 'search_docs') {
+      const query = String(args.query ?? '').trim().toLowerCase();
+      if (!query) {
+        respondError(id, -32602, 'search_docs requires a non-empty query.');
+        return;
+      }
+
+      const matches = [
+        ...searchEntries('api', { api: apiText }, query),
+        ...searchEntries('recipe', recipes, query),
+      ];
+
+      respondTool(id, matches.length > 0 ? matches.join('\n\n') : `No matches for "${query}".`);
+      return;
+    }
+
+    respondError(id, -32601, `Tool not found: ${name ?? 'missing name'}`);
+    return;
+  }
+
   respondError(id, -32601, `Method not found: ${method}`);
 });
 
@@ -138,8 +238,25 @@ function respond(id, result) {
   process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, result })}\n`);
 }
 
+function respondTool(id, text) {
+  respond(id, { content: [{ type: 'text', text }] });
+}
+
 function respondError(id, code, message) {
   process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } })}\n`);
+}
+
+function normalizeRecipeName(value) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-');
+}
+
+function searchEntries(kind, values, query) {
+  return Object.entries(values)
+    .filter(([name, text]) => `${name}\n${text}`.toLowerCase().includes(query))
+    .map(([name, text]) => `## ${kind}: ${name}\n${text}`);
 }
 
 function readPackage() {
