@@ -1,0 +1,59 @@
+name: Size
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout head
+        uses: actions/checkout@v4
+        with:
+          path: head
+
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: base
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.2
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 25
+
+      - name: Build head
+        working-directory: head
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm size:json > ../head-size.json
+
+      - name: Build base
+        working-directory: base
+        continue-on-error: true
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+          pnpm size:json > ../base-size.json
+
+      - name: Compare size
+        run: |
+          if [ -f base-size.json ]; then
+            node head/scripts/size-compare.mjs base-size.json head-size.json >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Base branch does not have size tooling yet. Head size:" >> "$GITHUB_STEP_SUMMARY"
+            cat head-size.json >> "$GITHUB_STEP_SUMMARY"
+          fi

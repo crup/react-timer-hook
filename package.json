@@ -1,10 +1,39 @@
 {
   "name": "react-timer-hook",
-  "version": "1.0.0",
-  "description": "React hooks for timer, stopwatch, and current time state.",
-  "main": "index.js",
+  "version": "0.0.0",
+  "description": "Deterministic React timer lifecycle hooks for timers, schedules, and many independent timers.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=25.0.0"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsup",
+    "changeset": "changeset",
+    "docs:api": "typedoc --out docs-api src/index.ts",
+    "docs:build": "pnpm docs:api",
+    "prepare": "husky",
+    "readme:check": "node scripts/check-readme.mjs",
+    "release": "changeset publish",
+    "size": "node scripts/size-report.mjs",
+    "size:json": "node scripts/size-report.mjs --json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [
     "react",
@@ -15,5 +44,27 @@
   ],
   "author": "Rajender Joshi <connect@rajender.pro>",
   "license": "MIT",
-  "type": "commonjs"
+  "type": "module",
+  "packageManager": "pnpm@10.30.2",
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.7",
+    "@commitlint/cli": "^20.2.0",
+    "@commitlint/config-conventional": "^20.2.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.10.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "husky": "^9.1.7",
+    "jsdom": "^27.3.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tsup": "^8.5.1",
+    "typedoc": "^0.28.15",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.16"
+  }
 }

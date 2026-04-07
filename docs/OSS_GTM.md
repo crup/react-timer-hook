@@ -160,6 +160,45 @@ Optional:
 
 - npm provenance if supported by the package manager and registry setup
 
+### Prerelease Workflow
+
+Use `next` as the prerelease integration branch. Do not create a permanent `alpha` branch by default.
+
+Prerelease quality is represented by Changesets prerelease ids and npm dist-tags:
+
+- `alpha`: earliest installable builds before `0.0.1`
+- `beta`: API mostly settled
+- `rc`: release candidate
+- `latest`: stable release from `main`
+
+For the first installable test versions, publish:
+
+```txt
+0.0.1-alpha.<github-run-number>
+```
+
+Consumers test with:
+
+```sh
+npm install react-timer-hook@alpha
+```
+
+Keep prerelease publishing manual at first with `workflow_dispatch`, so every push to `next` does not automatically publish to npm.
+
+The manual prerelease workflow sets a temporary package version during the GitHub Actions run and publishes with the selected dist-tag. It does not require committing alpha version bumps back to the repository.
+
+### Size Tracking
+
+Track bundle size in CI.
+
+Required behavior:
+
+- Build the current branch.
+- Build `main` as the comparison base when possible.
+- Report raw, gzip, and brotli sizes.
+- Report deltas in the GitHub Actions step summary.
+- Do not block the first PR only because `main` does not have size tooling yet.
+
 ## Semantic Versioning
 
 Use semver strictly.

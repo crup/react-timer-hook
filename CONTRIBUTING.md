@@ -8,6 +8,7 @@ This project aims to stay small, deterministic, and heavily tested. Please read 
 - [API Specification](./docs/API.md)
 - [Implementation Plan](./docs/IMPLEMENTATION.md)
 - [Task Plan](./docs/TASKS.md)
+- [Branching and Commits](./docs/BRANCHING_AND_COMMITS.md)
 
 ## Project Boundaries
 
@@ -48,8 +49,31 @@ Expected commands after project setup:
 pnpm test
 pnpm typecheck
 pnpm build
-pnpm docs:check
+pnpm docs:build
+pnpm readme:check
 ```
+
+## Branches and Commit Messages
+
+Use `feature/timer-core-v1` for the first implementation branch.
+
+Use Conventional Commits:
+
+```txt
+<type>(<scope>): <summary>
+```
+
+Examples:
+
+```txt
+feat(timer): implement lifecycle controls
+fix(group): preserve item state across rerenders
+docs(release): document alpha prerelease flow
+```
+
+Commit messages are enforced with commitlint through Husky. Changesets still own package versioning.
+
+See [Branching and Commits](./docs/BRANCHING_AND_COMMITS.md) for the full branch, alpha, beta, release-candidate, and stable release flow.
 
 ## API Change Rules
 
