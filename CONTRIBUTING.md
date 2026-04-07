@@ -44,6 +44,7 @@ The library does not own:
 Expected commands after project setup:
 
 ```sh
+node --version # v24.x
 pnpm test
 pnpm typecheck
 pnpm build

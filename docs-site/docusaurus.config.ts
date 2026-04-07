@@ -12,9 +12,6 @@ const config: Config = {
   projectName: 'react-timer-hook',
   trailingSlash: true,
   onBrokenLinks: 'throw',
-  future: {
-    experimental_router: 'hash',
-  },
   markdown: {
     hooks: {
       onBrokenMarkdownLinks: 'warn',

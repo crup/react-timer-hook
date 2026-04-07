@@ -25,10 +25,10 @@ jobs:
         with:
           version: 10.30.2
 
-      - name: 3. Setup Node 25
+      - name: 3. Setup Node 24
         uses: actions/setup-node@v4
         with:
-          node-version: 25
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
 

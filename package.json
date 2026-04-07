@@ -23,7 +23,7 @@
     "tag": "alpha"
   },
   "engines": {
-    "node": ">=25.0.0"
+    "node": ">=24.0.0"
   },
   "scripts": {
     "ai:context": "node scripts/ai-context.mjs",
