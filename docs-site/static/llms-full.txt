@@ -104,6 +104,11 @@ Local docs MCP server:
 
 The package bundles the MCP server at node_modules/@crup/react-timer-hook/dist/mcp/server.js and exposes it through the react-timer-hook-mcp bin.
 
+MCP tools:
+- get_api_docs
+- get_recipe
+- search_docs
+
 ## Boundaries
 
 Use the hook for timer lifecycle, elapsed time, schedules, and controls. Keep UI display and data fetching in your app.
