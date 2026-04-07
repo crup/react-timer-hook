@@ -70,6 +70,22 @@ describe('useTimer lifecycle', () => {
     expect(onEnd).toHaveBeenCalledTimes(2);
   });
 
+  it('checks end conditions immediately on start', () => {
+    const onEnd = vi.fn();
+    const { result } = renderHook(() =>
+      useTimer({
+        updateIntervalMs: 100,
+        endWhen: snapshot => snapshot.now >= 0,
+        onEnd,
+      }),
+    );
+
+    act(() => result.current.start());
+
+    expect(result.current.status).toBe('ended');
+    expect(onEnd).toHaveBeenCalledTimes(1);
+  });
+
   it('does not call onEnd when cancelled', () => {
     const onEnd = vi.fn();
     const { result } = renderHook(() =>

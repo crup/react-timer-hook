@@ -10,6 +10,31 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./group": {
+      "types": "./dist/group.d.ts",
+      "import": "./dist/group.js",
+      "require": "./dist/group.cjs"
+    },
+    "./duration": {
+      "types": "./dist/duration.d.ts",
+      "import": "./dist/duration.js",
+      "require": "./dist/duration.cjs"
+    },
+    "./schedules": {
+      "types": "./dist/schedules.d.ts",
+      "import": "./dist/schedules.js",
+      "require": "./dist/schedules.cjs"
+    },
+    "./diagnostics": {
+      "types": "./dist/diagnostics.d.ts",
+      "import": "./dist/diagnostics.js",
+      "require": "./dist/diagnostics.cjs"
+    },
+    "./full": {
+      "types": "./dist/full.d.ts",
+      "import": "./dist/full.js",
+      "require": "./dist/full.cjs"
     }
   },
   "files": [

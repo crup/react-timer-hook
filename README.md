@@ -1,6 +1,6 @@
 # @crup/react-timer-hook
 
-> React timer hooks for countdowns, stopwatches, clocks, polling schedules, and many independent timer lifecycles.
+> Tiny React timer primitives for countdowns, stopwatches, clocks, polling schedules, and many independent timer lifecycles.
 
 [![npm alpha](https://img.shields.io/npm/v/%40crup%2Freact-timer-hook/alpha?label=npm%20alpha&color=00b894)](https://www.npmjs.com/package/@crup/react-timer-hook?activeTab=versions)
 [![npm downloads](https://img.shields.io/npm/dm/%40crup%2Freact-timer-hook?color=0f766e)](https://www.npmjs.com/package/@crup/react-timer-hook)
@@ -17,11 +17,12 @@
 
 Timer hooks look simple until real apps need pause/resume semantics, Strict Mode cleanup, async callbacks, polling that does not overlap, and lists with dozens of independent timers.
 
-`@crup/react-timer-hook` keeps the API small and lets your app decide what time means:
+`@crup/react-timer-hook` keeps the root import small and lets your app opt into heavier features only when needed:
 
-- ⏱️ `useTimer()` for one lifecycle: stopwatch, countdown, clock, schedule, or custom flow.
-- 🧭 `useTimerGroup()` for many keyed lifecycles with one shared scheduler.
-- 🧩 `durationParts()` for display math without locale or timezone opinions.
+- ⏱️ `useTimer()` from the root package for one lifecycle: stopwatch, countdown, clock, or custom flow.
+- 🧭 `useTimerGroup()` from `/group` for many keyed lifecycles with one shared scheduler.
+- 📡 `useScheduledTimer()` from `/schedules` for polling, overdue timing context, and opt-in diagnostics.
+- 🧩 `durationParts()` from `/duration` for display math without locale or timezone opinions.
 - 🧼 No formatting, timezone, audio, retry, cache, or data-fetching policy baked in.
 - 🧪 Built for rerenders, Strict Mode, async callbacks, cleanup, and many timers.
 - 🤖 Agent-friendly docs through hosted `llms.txt`, `llms-full.txt`, and an optional MCP docs helper.
@@ -36,7 +37,13 @@ pnpm add @crup/react-timer-hook@alpha
 ```
 
 ```tsx
-import { durationParts, useTimer, useTimerGroup } from '@crup/react-timer-hook';
+import { useTimer } from '@crup/react-timer-hook';
+import { durationParts } from '@crup/react-timer-hook/duration';
+import { useTimerGroup } from '@crup/react-timer-hook/group';
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
+
+// Or choose convenience over minimum entry size:
+import { durationParts, useScheduledTimer, useTimer, useTimerGroup } from '@crup/react-timer-hook/full';
 ```
 
 ## Live recipes
@@ -99,7 +106,9 @@ export function AuctionTimer({ auctionId, expiresAt }: {
 Schedules run while the timer is active. Slow async work is skipped by default with `overlap: 'skip'`.
 
 ```tsx
-const timer = useTimer({
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
+
+const timer = useScheduledTimer({
   autoStart: true,
   updateIntervalMs: 1000,
   endWhen: snapshot => snapshot.now >= expiresAt,
@@ -123,6 +132,8 @@ const timer = useTimer({
 Use `useTimerGroup()` when every row needs its own pause, resume, cancel, restart, schedules, or `onEnd`.
 
 ```tsx
+import { useTimerGroup } from '@crup/react-timer-hook/group';
+
 const timers = useTimerGroup({
   updateIntervalMs: 1000,
   items: auctions.map(auction => ({
@@ -138,11 +149,14 @@ const timers = useTimerGroup({
 
 Current build:
 
-| File | Raw | Gzip | Brotli |
+| Entry | Raw | Gzip | Brotli |
 | --- | ---: | ---: | ---: |
-| `dist/index.js` | 12.80 kB | 3.88 kB | 3.47 kB |
-| `dist/index.cjs` | 14.04 kB | 4.12 kB | 3.70 kB |
-| `dist/index.d.ts` | 4.32 kB | 1.04 kB | 951 B |
+| core | 3.91 kB | 1.34 kB | 1.23 kB |
+| full | 15.03 kB | 4.69 kB | 4.18 kB |
+| timer group add-on | 9.05 kB | 3.01 kB | 2.74 kB |
+| schedules add-on | 6.99 kB | 2.35 kB | 2.16 kB |
+| duration helper | 374 B | 262 B | 229 B |
+| diagnostics helper | 156 B | 155 B | 139 B |
 
 CI writes a size summary to the GitHub Actions UI and posts bundle-size reports on pull requests.
 

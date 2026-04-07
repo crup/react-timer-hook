@@ -6,12 +6,14 @@ description: API reference for many keyed independent timer lifecycles driven by
 # useTimerGroup
 
 ```ts
+import { useTimerGroup } from '@crup/react-timer-hook/group';
+
 function useTimerGroup(options?: UseTimerGroupOptions): TimerGroupResult;
 ```
 
 Use `useTimerGroup()` when every row needs independent pause, resume, cancel, restart, schedules, or `onEnd`.
 
-Item schedules use the same `TimerSchedule` contract as `useTimer()`, including the third schedule context argument for intended fire time, actual fire time, next run time, and overdue interval count.
+Item schedules use the same `TimerSchedule` contract as `useScheduledTimer()`, including the third schedule context argument for intended fire time, actual fire time, next run time, and overdue interval count.
 
 ```ts
 type UseTimerGroupOptions = {

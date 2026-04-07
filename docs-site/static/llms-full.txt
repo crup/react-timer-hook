@@ -10,7 +10,12 @@ pnpm add @crup/react-timer-hook@alpha
 ## Exports
 
 ```ts
-import { durationParts, useTimer, useTimerGroup } from '@crup/react-timer-hook';
+import { useTimer } from '@crup/react-timer-hook';
+import { consoleTimerDiagnostics } from '@crup/react-timer-hook/diagnostics';
+import { durationParts } from '@crup/react-timer-hook/duration';
+import { useTimerGroup } from '@crup/react-timer-hook/group';
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
+import { durationParts, useScheduledTimer, useTimer, useTimerGroup } from '@crup/react-timer-hook/full';
 ```
 
 ## useTimer
@@ -21,8 +26,6 @@ useTimer({
   updateIntervalMs?: number;
   endWhen?: (snapshot: TimerSnapshot) => boolean;
   onEnd?: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
-  schedules?: TimerSchedule[];
-  debug?: TimerDebug;
 })
 ```
 
@@ -34,7 +37,7 @@ Use `useTimerGroup()` for many keyed timers that each need independent lifecycle
 
 ## Schedules
 
-Schedules are app-owned side effects. Default overlap behavior is `skip`.
+Use `useScheduledTimer()` from `@crup/react-timer-hook/schedules` for app-owned side effects. Default overlap behavior is `skip`.
 
 Schedule callbacks receive `(snapshot, controls, context)`. `context` includes `scheduleId`, `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`.
 
@@ -52,7 +55,7 @@ Intermediate:
 - `/recipes/intermediate/polling-schedule/`: `schedules`.
 - `/recipes/intermediate/poll-and-cancel/`: call `controls.cancel(reason)`.
 - `/recipes/intermediate/backend-event-stop/`: call `timer.cancel(reason)` from a subscription.
-- `/recipes/intermediate/debug-logs/`: opt in with `debug.logger`.
+- `/recipes/intermediate/debug-logs/`: opt in with `consoleTimerDiagnostics`.
 
 Advanced:
 - `/recipes/advanced/many-display-countdowns/`: one shared `useTimer`.

@@ -15,9 +15,10 @@ Schedules run while the timer is active. Async overlap defaults to `skip`.
 </RecipePlayground>
 
 ```tsx
-useTimer({
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
+
+useScheduledTimer({
   autoStart: true,
   schedules: [{ id: 'refresh-status', everyMs: 5000, callback: refresh }],
 });
 ```
-

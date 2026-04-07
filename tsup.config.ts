@@ -1,7 +1,14 @@
 import { defineConfig } from 'tsup';
 
 export default defineConfig({
-  entry: ['src/index.ts'],
+  entry: {
+    index: 'src/index.ts',
+    group: 'src/group.ts',
+    duration: 'src/duration.ts',
+    schedules: 'src/schedules.ts',
+    diagnostics: 'src/diagnostics.ts',
+    full: 'src/full.ts',
+  },
   format: ['esm', 'cjs'],
   dts: true,
   minify: true,

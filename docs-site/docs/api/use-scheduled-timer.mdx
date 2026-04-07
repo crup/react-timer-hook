@@ -1,0 +1,39 @@
+---
+title: useScheduledTimer
+description: Optional schedule-enabled timer API for polling and timing context.
+---
+
+# useScheduledTimer
+
+```ts
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
+```
+
+`useScheduledTimer()` includes the lifecycle API from `useTimer()` plus schedule callbacks and opt-in debug events. It lives in a subpath so the root import stays small for clocks, stopwatches, and countdowns that do not need polling.
+
+```ts
+type UseScheduledTimerOptions = UseTimerOptions & {
+  schedules?: TimerSchedule[];
+  debug?: TimerDebug;
+};
+```
+
+Schedules run while active and default to `overlap: 'skip'`.
+
+```ts
+const timer = useScheduledTimer({
+  autoStart: true,
+  schedules: [
+    {
+      id: 'poll',
+      everyMs: 5000,
+      overlap: 'skip',
+      callback: async (snapshot, controls, context) => {
+        console.log(context.overdueCount);
+      },
+    },
+  ],
+});
+```
+
+The third callback argument contains `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`.

@@ -13,14 +13,24 @@ pnpm add @crup/react-timer-hook@alpha
 ```
 
 ```tsx
-import { durationParts, useTimer, useTimerGroup } from '@crup/react-timer-hook';
+import { useTimer } from '@crup/react-timer-hook';
+import { durationParts } from '@crup/react-timer-hook/duration';
+import { useTimerGroup } from '@crup/react-timer-hook/group';
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
 import type { TimerSnapshot } from '@crup/react-timer-hook';
+```
+
+Prefer one convenience import over the smallest entrypoints?
+
+```tsx
+import { durationParts, useScheduledTimer, useTimer, useTimerGroup } from '@crup/react-timer-hook/full';
 ```
 
 ## First timer
 
 ```tsx
-import { durationParts, useTimer } from '@crup/react-timer-hook';
+import { useTimer } from '@crup/react-timer-hook';
+import { durationParts } from '@crup/react-timer-hook/duration';
 
 export function BreakTimer() {
   const durationMs = 5 * 60 * 1000;

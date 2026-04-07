@@ -8,13 +8,12 @@ description: Opt-in semantic diagnostics for timer lifecycles and schedules.
 Debug logs are off by default.
 
 ```tsx
-useTimer({
+import { useScheduledTimer } from '@crup/react-timer-hook/schedules';
+import { consoleTimerDiagnostics } from '@crup/react-timer-hook/diagnostics';
+
+useScheduledTimer({
   autoStart: true,
-  debug: {
-    label: 'auction-card',
-    includeTicks: false,
-    logger: event => console.debug('[timer]', event),
-  },
+  debug: consoleTimerDiagnostics({ label: 'auction-card' }),
 });
 ```
 

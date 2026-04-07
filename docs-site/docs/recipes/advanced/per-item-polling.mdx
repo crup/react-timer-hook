@@ -15,10 +15,11 @@ Each item can define schedules with different cadence and callbacks.
 </RecipePlayground>
 
 ```tsx
+import { useTimerGroup } from '@crup/react-timer-hook/group';
+
 items: jobs.map(job => ({
   id: job.id,
   autoStart: true,
   schedules: [{ id: 'status', everyMs: job.pollMs, callback: refresh }],
 }))
 ```
-

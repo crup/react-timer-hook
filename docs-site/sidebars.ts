@@ -8,7 +8,7 @@ const sidebars: SidebarsConfig = {
     {
       type: 'category',
       label: 'API',
-      items: ['api/use-timer', 'api/use-timer-group', 'api/types'],
+      items: ['api/use-timer', 'api/use-scheduled-timer', 'api/use-timer-group', 'api/types'],
     },
     {
       type: 'category',

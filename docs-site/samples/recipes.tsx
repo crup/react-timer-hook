@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { durationParts, useTimer, useTimerGroup } from '../../src';
+import { durationParts } from '../../src/duration';
+import { useTimerGroup } from '../../src/group';
+import { useScheduledTimer } from '../../src/schedules';
+import { useTimer } from '../../src/useTimer';
 import type { TimerControls, TimerSnapshot } from '../../src';
 
 const now = () => Date.now();
@@ -148,7 +151,7 @@ export function OnEndSample() {
 
 export function PollingSample() {
   const [polls, setPolls] = useState<string[]>([]);
-  const timer = useTimer({
+  const timer = useScheduledTimer({
     autoStart: true,
     updateIntervalMs: 250,
     schedules: [
@@ -178,7 +181,7 @@ export function PollingSample() {
 
 export function PollAndCancelSample() {
   const [checks, setChecks] = useState<string[]>([]);
-  const timer = useTimer({
+  const timer = useScheduledTimer({
     autoStart: true,
     updateIntervalMs: 250,
     schedules: [
@@ -249,7 +252,7 @@ export function BackendEventSample() {
 
 export function DebugLogsSample() {
   const [logs, setLogs] = useState<string[]>([]);
-  const timer = useTimer({
+  const timer = useScheduledTimer({
     updateIntervalMs: 1000,
     debug: {
       label: 'docs-demo',

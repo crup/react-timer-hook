@@ -32,8 +32,8 @@ const resources = {
       '- Countdown: derive remaining time with Math.max(0, expiresAt - timer.now).',
       '- Stopwatch: render timer.elapsedMilliseconds.',
       '- Clock: render new Date(timer.now) with user-owned formatting.',
-      '- Polling: use schedules with overlap: skip.',
-      '- Many timers: use useTimerGroup() for independent keyed lifecycles.',
+      '- Polling: import useScheduledTimer from @crup/react-timer-hook/schedules.',
+      '- Many timers: import useTimerGroup from @crup/react-timer-hook/group.',
     ].join('\n'),
   },
 };

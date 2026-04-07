@@ -9,16 +9,18 @@ if (!basePath || !headPath) {
 
 const base = readJson(basePath);
 const head = readJson(headPath);
-const baseByFile = new Map(base.map(row => [row.file, row]));
+const baseByFile = new Map(base.map(row => [row.label ?? row.file, row]));
 
-console.log('| File | Raw | Gzip | Brotli | Raw delta | Gzip delta | Brotli delta |');
-console.log('| --- | ---: | ---: | ---: | ---: | ---: | ---: |');
+console.log('| Entry | Files | Raw | Gzip | Brotli | Raw delta | Gzip delta | Brotli delta |');
+console.log('| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
 
 for (const row of head) {
-  const old = baseByFile.get(row.file);
+  const label = row.label ?? row.file;
+  const old = baseByFile.get(label);
   console.log(
     [
-      `| \`${row.file}\``,
+      `| ${label}`,
+      row.files?.length ?? 1,
       formatBytes(row.bytes),
       formatBytes(row.gzipBytes),
       formatBytes(row.brotliBytes),

@@ -9,7 +9,7 @@ import { StopwatchSample, AbsoluteCountdownSample, TimerGroupSample } from '../s
 
 # React timer hooks
 
-`@crup/react-timer-hook` gives React apps a small timer lifecycle primitive instead of a formatting-heavy timer component.
+`@crup/react-timer-hook` gives React apps a small root timer primitive and optional subpath hooks for schedules, groups, diagnostics, and duration helpers.
 
 It is built for Strict Mode, rerenders, async callbacks, cleanup, and pages with many independent timers.
 
@@ -35,8 +35,9 @@ pnpm add @crup/react-timer-hook@alpha
 ## Public API
 
 - `useTimer()` for one lifecycle
-- `useTimerGroup()` for many keyed independent lifecycles
-- `durationParts()` for duration display math
+- `useScheduledTimer()` from `/schedules` for polling and schedule timing context
+- `useTimerGroup()` from `/group` for many keyed independent lifecycles
+- `durationParts()` from `/duration` for duration display math
 
 The library owns scheduling and cleanup. Your app owns formatting, timezone, data fetching policy, and business rules.
 

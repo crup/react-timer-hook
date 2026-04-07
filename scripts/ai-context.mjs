@@ -10,7 +10,14 @@ const context = {
   install: {
     alpha: `npm install ${pkg.name}@alpha`,
   },
-  exports: ['useTimer', 'useTimerGroup', 'durationParts'],
+  exports: [
+    '@crup/react-timer-hook: useTimer',
+    '@crup/react-timer-hook/group: useTimerGroup',
+    '@crup/react-timer-hook/schedules: useScheduledTimer',
+    '@crup/react-timer-hook/duration: durationParts',
+    '@crup/react-timer-hook/diagnostics: consoleTimerDiagnostics',
+    '@crup/react-timer-hook/full: convenience runtime exports',
+  ],
   principles: [
     'Use now for wall-clock deadlines and clocks.',
     'Use elapsedMilliseconds for active elapsed duration.',

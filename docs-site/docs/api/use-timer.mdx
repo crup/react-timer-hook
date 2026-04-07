@@ -17,8 +17,6 @@ type UseTimerOptions = {
   updateIntervalMs?: number;
   endWhen?: (snapshot: TimerSnapshot) => boolean;
   onEnd?: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
-  schedules?: TimerSchedule[];
-  debug?: TimerDebug;
 };
 ```
 
@@ -28,7 +26,7 @@ type UseTimerOptions = {
 
 `onEnd` fires once per generation. `restart()` creates a new generation.
 
-Schedules run while active and default to `overlap: 'skip'`. The schedule callback receives a third `context` argument with `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`, so delayed browser timers can be measured without exposing timeout handles.
+The root `useTimer()` export is lifecycle-only to keep the default bundle small. Use `@crup/react-timer-hook/schedules` when you need polling schedules and schedule timing context.
 
 ## Controls
 

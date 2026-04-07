@@ -107,6 +107,9 @@ export type UseTimerOptions = {
   updateIntervalMs?: number;
   endWhen?: TimerEndPredicate;
   onEnd?: (snapshot: TimerSnapshot, controls: TimerControls) => void | Promise<void>;
+};
+
+export type UseScheduledTimerOptions = UseTimerOptions & {
   schedules?: TimerSchedule[];
   debug?: TimerDebug;
 };
