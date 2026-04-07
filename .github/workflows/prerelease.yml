@@ -66,12 +66,3 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Remove stable latest tag from prerelease
-        if: inputs.tag != 'latest'
-        run: |
-          PACKAGE_NAME=$(node -p "require('./package.json').name")
-          npm dist-tag rm "$PACKAGE_NAME" latest || true
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
