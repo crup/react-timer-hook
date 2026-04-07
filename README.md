@@ -143,6 +143,85 @@ const timers = useTimerGroup({
 });
 ```
 
+## API tables
+
+### `useTimer()` settings
+
+| Key | Type | Required | Description |
+| --- | --- | --- | --- |
+| `autoStart` | `boolean` | No | Starts the lifecycle after mount. Defaults to `false`. |
+| `updateIntervalMs` | `number` | No | Render/update cadence in milliseconds. Defaults to `1000`. This does not define elapsed time; elapsed time is calculated from timestamps. Use a smaller value like `100` or `20` when the UI needs finer updates. |
+| `endWhen` | `(snapshot) => boolean` | No | Ends the lifecycle when it returns `true`. Use this for countdowns, timeouts, and custom stop conditions. |
+| `onEnd` | `(snapshot, controls) => void \| Promise<void>` | No | Called once per generation when `endWhen` ends the lifecycle. `restart()` creates a new generation. |
+
+### `useScheduledTimer()` settings
+
+Import from `@crup/react-timer-hook/schedules` when you need polling or scheduled side effects.
+
+| Key | Type | Required | Description |
+| --- | --- | --- | --- |
+| `autoStart` | `boolean` | No | Starts the lifecycle after mount. Defaults to `false`. |
+| `updateIntervalMs` | `number` | No | Render/update cadence in milliseconds. Defaults to `1000`. Scheduled callbacks can run on their own cadence. |
+| `endWhen` | `(snapshot) => boolean` | No | Ends the lifecycle when it returns `true`. |
+| `onEnd` | `(snapshot, controls) => void \| Promise<void>` | No | Called once per generation when `endWhen` ends the lifecycle. |
+| `schedules` | `TimerSchedule[]` | No | Scheduled side effects that run while the timer is active. Async overlap defaults to `skip`. |
+| `debug` | `TimerDebug` | No | Opt-in semantic diagnostics. No logs are emitted by default. |
+
+### `TimerSchedule`
+
+| Key | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | No | Stable identifier used in debug events and schedule context. Falls back to the array index. |
+| `everyMs` | `number` | Yes | Schedule cadence in milliseconds. Must be positive and finite. |
+| `leading` | `boolean` | No | Runs the schedule immediately when the timer starts or resumes into a new generation. Defaults to `false`. |
+| `overlap` | `'skip' \| 'allow'` | No | Controls async overlap. Defaults to `skip`, so a pending callback prevents another run. |
+| `callback` | `(snapshot, controls, context) => void \| Promise<void>` | Yes | Scheduled side effect. Receives timing context with `scheduledAt`, `firedAt`, `nextRunAt`, `overdueCount`, and `effectiveEveryMs`. |
+
+### `useTimerGroup()` settings
+
+Import from `@crup/react-timer-hook/group` when many keyed items need independent lifecycle control.
+
+| Key | Type | Required | Description |
+| --- | --- | --- | --- |
+| `updateIntervalMs` | `number` | No | Shared scheduler cadence for the group. Defaults to `1000`. |
+| `items` | `TimerGroupItem[]` | No | Initial/synced timer item definitions. Each item has its own lifecycle state. |
+| `debug` | `TimerDebug` | No | Opt-in semantic diagnostics for group lifecycle and schedule events. |
+
+### `TimerGroupItem`
+
+| Key | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | Yes | Stable key for the item. Duplicate IDs throw. |
+| `autoStart` | `boolean` | No | Starts the item automatically when it is added or synced. Defaults to `false`. |
+| `endWhen` | `(snapshot) => boolean` | No | Ends that item when it returns `true`. |
+| `onEnd` | `(snapshot, controls) => void \| Promise<void>` | No | Called once per item generation when that item ends naturally. |
+| `schedules` | `TimerSchedule[]` | No | Per-item schedules with the same contract as `useScheduledTimer()`. |
+
+### Values and controls
+
+| Key | Type | Description |
+| --- | --- | --- |
+| `status` | `'idle' \| 'running' \| 'paused' \| 'ended' \| 'cancelled'` | Current lifecycle state. |
+| `now` | `number` | Wall-clock timestamp from `Date.now()`. Use for clocks and absolute deadlines. |
+| `tick` | `number` | Number of render/update ticks produced in the current generation. |
+| `startedAt` | `number \| null` | Wall-clock timestamp when the current generation started. |
+| `pausedAt` | `number \| null` | Wall-clock timestamp for the current pause, or `null`. |
+| `endedAt` | `number \| null` | Wall-clock timestamp when `endWhen` ended the lifecycle. |
+| `cancelledAt` | `number \| null` | Wall-clock timestamp when `cancel()` ended the lifecycle early. |
+| `cancelReason` | `string \| null` | Optional reason passed to `cancel(reason)`. |
+| `elapsedMilliseconds` | `number` | Active elapsed duration calculated from monotonic time, excluding paused time. |
+| `isIdle` | `boolean` | Convenience flag for `status === 'idle'`. |
+| `isRunning` | `boolean` | Convenience flag for `status === 'running'`. |
+| `isPaused` | `boolean` | Convenience flag for `status === 'paused'`. |
+| `isEnded` | `boolean` | Convenience flag for `status === 'ended'`. |
+| `isCancelled` | `boolean` | Convenience flag for `status === 'cancelled'`. |
+| `start()` | `function` | Starts an idle timer. No-op if it is already started. |
+| `pause()` | `function` | Pauses a running timer. |
+| `resume()` | `function` | Resumes a paused timer from the paused elapsed value. |
+| `reset(options?)` | `function` | Resets to idle and zero elapsed time. Pass `{ autoStart: true }` to reset directly into running. |
+| `restart()` | `function` | Starts a new running generation from zero elapsed time. |
+| `cancel(reason?)` | `function` | Terminal early stop. Does not call `onEnd`. |
+
 ## Bundle size
 
 The core import stays small. Extra capabilities are opt-in batteries.
