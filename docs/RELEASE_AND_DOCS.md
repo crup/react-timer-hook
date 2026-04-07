@@ -18,6 +18,7 @@ Recommended scripts:
     "docs:readme": "markdown-magic --path README.md",
     "docs:check": "pnpm docs:api && pnpm docs:site && pnpm docs:readme && git diff --exit-code README.md",
     "changeset": "changeset",
+    "prepare": "husky",
     "release": "changeset publish"
   }
 }
@@ -26,6 +27,41 @@ Recommended scripts:
 These exact commands may change depending on the chosen docs stack. Keep script names stable so CI and contributor instructions stay simple.
 
 ## GitHub Actions Plan
+
+## Branching and Prerelease Strategy
+
+Use:
+
+- `main` for stable releases to npm dist-tag `latest`.
+- `next` for prerelease integration.
+- `feature/*`, `fix/*`, `docs/*`, and `chore/*` for short-lived work.
+
+Before the first stable `0.0.1`, publish alpha builds from `next` using the manual Prerelease GitHub Action:
+
+```sh
+git switch next
+# Run .github/workflows/prerelease.yml with:
+# tag=alpha
+# version_base=0.0.1
+```
+
+This produces versions like:
+
+```txt
+0.0.1-alpha.<github-run-number>
+```
+
+Use the same `next` branch for later prerelease quality gates:
+
+- `alpha` for earliest installable builds
+- `beta` for mostly settled API
+- `rc` for release candidates
+
+The first implementation branch should be:
+
+```sh
+git switch -c feature/timer-core-v1
+```
 
 ### `.github/workflows/ci.yml`
 
@@ -93,6 +129,43 @@ Acceptance criteria:
 - Merging release PR publishes to npm.
 - npm publish only happens after tests and build pass.
 - Uses `NPM_TOKEN`.
+
+### `.github/workflows/prerelease.yml`
+
+Purpose: manually publish alpha, beta, or release-candidate builds from `next`.
+
+Trigger:
+
+- `workflow_dispatch`
+
+Inputs:
+
+- `tag`: `alpha`, `beta`, or `rc`
+- `version_base`: defaults to `0.0.1`
+
+Acceptance criteria:
+
+- Only runs from `next`.
+- Verifies tests, typecheck, build, and package size before publishing.
+- Publishes with `pnpm publish --tag <tag> --access public --no-git-checks`.
+- Publishes unique prerelease versions shaped as `<version_base>-<tag>.<github-run-number>`.
+- Uses `NPM_TOKEN`.
+
+### `.github/workflows/size.yml`
+
+Purpose: compare package size against `main`.
+
+Trigger:
+
+- pull requests
+- pushes to `main`
+
+Acceptance criteria:
+
+- Builds the PR/head branch.
+- Attempts to build `main`.
+- Writes raw, gzip, and brotli size deltas to the GitHub Actions step summary.
+- Does not fail the first PR only because `main` does not yet have size tooling.
 
 ## Changesets Plan
 

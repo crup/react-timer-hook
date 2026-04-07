@@ -222,6 +222,24 @@ No logs should be emitted by default.
 
 Debug events should be semantic, for example `timer:start`, `timer:tick`, `scheduler:start`, `schedule:skip`, and `timer:end`. The library should not expose raw `setTimeout` handles.
 
+## Bundle Size
+
+Current local build size:
+
+| File | Raw | Gzip | Brotli |
+| --- | ---: | ---: | ---: |
+| `dist/index.js` | 27.32 kB | 4.69 kB | 4.18 kB |
+| `dist/index.cjs` | 29.18 kB | 5.08 kB | 4.50 kB |
+| `dist/index.d.ts` | 3.95 kB | 992 B | 888 B |
+
+Run this after `pnpm build`:
+
+```sh
+pnpm size
+```
+
+CI compares PR bundle size against `main` and writes a size summary to the workflow output.
+
 ## Implementation Notes
 
 - Use recursive `setTimeout`, not `setInterval`.
@@ -240,6 +258,7 @@ See:
 - [API Specification](./docs/API.md)
 - [Design Decisions](./docs/DECISIONS.md)
 - [Recipes](./docs/RECIPES.md)
+- [Branching and Commits](./docs/BRANCHING_AND_COMMITS.md)
 - [Implementation Plan](./docs/IMPLEMENTATION.md)
 - [Task Plan](./docs/TASKS.md)
 - [OSS and GTM Plan](./docs/OSS_GTM.md)
