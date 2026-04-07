@@ -257,7 +257,7 @@ The default import stays small. Add the other pieces only when that screen needs
 | 📡 Schedules | `@crup/react-timer-hook/schedules` | Polling, cadence callbacks, overdue timing context | 8.62 kB | 3.02 kB | 2.78 kB |
 | 🧩 Duration | `@crup/react-timer-hook/duration` | `days`, `hours`, `minutes`, `seconds`, `milliseconds` | 318 B | 224 B | 192 B |
 | 🔎 Diagnostics | `@crup/react-timer-hook/diagnostics` | Optional lifecycle and schedule event logging | 105 B | 115 B | 90 B |
-| 🤖 MCP docs server | `react-timer-hook-mcp` | Optional local docs context for MCP clients and coding agents | 6.69 kB | 2.60 kB | 2.25 kB |
+| 🤖 MCP docs server | `react-timer-hook-mcp` | Optional local docs context for MCP clients and coding agents | 6.95 kB | 2.72 kB | 2.36 kB |
 
 CI writes a size summary to the GitHub Actions UI and posts bundle-size reports on pull requests.
 
@@ -308,11 +308,11 @@ react-timer-hook://recipes
 
 It also exposes MCP tools that editors are more likely to call directly:
 
-```txt
-get_api_docs
-get_recipe
-search_docs
-```
+| Tool | Title | Description |
+| --- | --- | --- |
+| `get_api_docs` | Get API docs | Returns compact API notes for `@crup/react-timer-hook`. |
+| `get_recipe` | Get recipe | Returns guidance for a named recipe or use case. |
+| `search_docs` | Search docs | Searches API and recipe notes for a query. |
 
 ## Contributing
 

@@ -94,6 +94,7 @@ const recipes = {
 const tools = [
   {
     name: 'get_api_docs',
+    title: 'Get API docs',
     description: 'Return the compact API notes for @crup/react-timer-hook.',
     inputSchema: {
       type: 'object',
@@ -103,6 +104,7 @@ const tools = [
   },
   {
     name: 'get_recipe',
+    title: 'Get recipe',
     description: 'Return guidance for a named recipe or use case.',
     inputSchema: {
       type: 'object',
@@ -118,6 +120,7 @@ const tools = [
   },
   {
     name: 'search_docs',
+    title: 'Search docs',
     description: 'Search API and recipe notes for a query.',
     inputSchema: {
       type: 'object',
@@ -146,6 +149,12 @@ rl.on('line', line => {
   }
 
   const { id, method, params } = request;
+  const hasId = Object.hasOwn(request, 'id');
+
+  if (!method) {
+    if (hasId) respondError(id, -32600, 'Invalid request: missing method.');
+    return;
+  }
 
   if (method === 'initialize') {
     respond(id, {
@@ -153,6 +162,15 @@ rl.on('line', line => {
       serverInfo: { name: 'react-timer-hook-docs', version: pkg.version },
       capabilities: { resources: {}, tools: {} },
     });
+    return;
+  }
+
+  if (method === 'notifications/initialized' || method.startsWith('notifications/')) {
+    return;
+  }
+
+  if (method === 'ping') {
+    if (hasId) respond(id, {});
     return;
   }
 
@@ -231,7 +249,7 @@ rl.on('line', line => {
     return;
   }
 
-  respondError(id, -32601, `Method not found: ${method}`);
+  if (hasId) respondError(id, -32601, `Method not found: ${method}`);
 });
 
 function respond(id, result) {
@@ -243,6 +261,7 @@ function respondTool(id, text) {
 }
 
 function respondError(id, code, message) {
+  if (id === undefined) return;
   process.stdout.write(`${JSON.stringify({ jsonrpc: '2.0', id, error: { code, message } })}\n`);
 }
 

@@ -105,9 +105,9 @@ Local docs MCP server:
 The package bundles the MCP server at node_modules/@crup/react-timer-hook/dist/mcp/server.js and exposes it through the react-timer-hook-mcp bin.
 
 MCP tools:
-- get_api_docs
-- get_recipe
-- search_docs
+- get_api_docs: Get API docs. Returns compact API notes for @crup/react-timer-hook.
+- get_recipe: Get recipe. Returns guidance for a named recipe or use case.
+- search_docs: Search docs. Searches API and recipe notes for a query.
 
 ## Boundaries
 
